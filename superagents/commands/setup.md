@@ -2,7 +2,7 @@
 description: Initialize the superagents RPI workflow for this project
 ---
 
-# /setup-superagents Command
+# /setup Command
 
 Initialize the superagents RPI workflow for this project.
 

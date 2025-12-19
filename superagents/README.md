@@ -18,13 +18,13 @@ Full-featured Research-Plan-Implement (RPI) workflow with Test-Driven Developmen
 
 ```bash
 # Add the hivemind-ai marketplace
-/plugin marketplace add path/to/hivemind-ai
+/plugin marketplace add git@github.com:skypuppy-labs/claude-hivemind-ai.git
 
 # Install superagents
 /plugin install superagents@hivemind-ai
 
 # Restart Claude Code, then run setup
-/setup-superagents
+/setup
 ```
 
 ### 2. Create Your Spec
@@ -61,7 +61,7 @@ Executes the RPI cycle for the next todo:
 
 | Command | Description |
 |---------|-------------|
-| `/setup-superagents` | Initialize .agents directory and update CLAUDE.md |
+| `/setup` | Initialize .agents directory and update CLAUDE.md |
 | `/work` | Execute RPI workflow for next todo |
 | `/update-roadmap` | Regenerate roadmap from spec |
 | `/fix-tests` | Systematic test repair |
