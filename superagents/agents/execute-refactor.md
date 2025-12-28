@@ -36,12 +36,7 @@ Apply one refactoring at a time:
 
 ## Go and See
 
-Before each change:
-1. Read the actual file (not from memory)
-2. Understand current structure
-3. Then apply the change
-
-File may have changed since GREEN. Verify first.
+Read actual files before changing. File may have changed since GREEN - verify first.
 
 ## Eliminate Waste
 
@@ -106,6 +101,15 @@ refactor(scope): improve quality
 🤖 Generated with Claude Code
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+
+## Common Failures & Recovery
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Tests fail after rename | Missed a reference | Search for old name, update all |
+| Tests fail after extract | Signature mismatch | Check function params and return type |
+| Type errors | Changed interface | Revert or update all usages |
+| Tests fail unexpectedly | Behavior changed | Revert - refactoring was unsafe |
 
 ## Key Rules
 

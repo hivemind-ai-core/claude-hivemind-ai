@@ -1,0 +1,19 @@
+# Plan Diagrams
+
+This directory contains Mermaid diagram sources (.mmd) and generated images (.svg) for execution plans.
+
+## Usage
+
+- Place .mmd files here for plan visualizations
+- Run diagram-to-image agent to convert to SVG
+- Reference in plan markdown: `![Diagram](./diagrams/name.svg)`
+
+## Naming Convention
+
+- {slug}-{phase}-overview.mmd - Phase overview diagram
+- {slug}-{phase}-components.mmd - Component interaction
+- {slug}-{phase}-sequence.mmd - Sequence diagram
+
+Example:
+- auth-system-red-mock-setup.mmd
+- auth-system-green-component-flow.mmd

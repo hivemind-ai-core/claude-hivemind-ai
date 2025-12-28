@@ -114,9 +114,83 @@ User → AuthService → Database → JWT Token
 4. **Clarity** - Easy to understand for new developers
 5. **Up-to-date** - No outdated information
 
-## Diagram Updates
+## Diagram Generation Process
 
-### System Architecture (Mermaid)
+### 1. Determine Needed Diagrams
+
+Based on changes, identify which diagrams need creating/updating:
+
+| Change Type | Diagram to Generate |
+|-------------|---------------------|
+| New component/service | System overview flowchart |
+| New API endpoints | Sequence diagram for key flows |
+| Database schema change | ER diagram |
+| State/lifecycle change | State diagram |
+
+### 2. Call diagram-generator Agent
+
+For each needed diagram:
+
+```typescript
+// Generate system overview if components changed
+await callAgent('diagram-generator', {
+  source: 'src/',
+  type: 'flowchart',
+  focus: 'system overview',
+  outputPath: 'architecture/diagrams/system-overview.mmd'
+})
+
+// Generate data model if schema changed
+await callAgent('diagram-generator', {
+  source: 'src/db/schema.ts',
+  type: 'er',
+  outputPath: 'architecture/diagrams/data-model.mmd'
+})
+
+// Generate sequence for new API flows
+await callAgent('diagram-generator', {
+  source: 'src/routes/auth.ts',
+  type: 'sequence',
+  focus: 'authentication flow',
+  outputPath: 'architecture/diagrams/auth-flow.mmd'
+})
+```
+
+### 3. Call diagram-to-image Agent
+
+Convert all .mmd files to SVG:
+
+```typescript
+await callAgent('diagram-to-image', {
+  sourcePath: 'architecture/diagrams/',
+  format: 'svg',
+  theme: 'default'
+})
+```
+
+### 4. Link in Documentation
+
+Update architecture markdown to reference generated images:
+
+```markdown
+# System Architecture
+
+## Overview
+
+![System Overview](./diagrams/system-overview.svg)
+
+## Data Model
+
+![Data Model](./diagrams/data-model.svg)
+
+## Authentication Flow
+
+![Auth Flow](./diagrams/auth-flow.svg)
+```
+
+## Diagram Examples
+
+### System Architecture (Flowchart)
 ```mermaid
 graph TD
     A[Client] --> B[API Gateway]
@@ -129,7 +203,7 @@ graph TD
     style E fill:#f3e5f5
 ```
 
-### Component Interaction
+### Component Interaction (Sequence)
 ```mermaid
 sequenceDiagram
     participant Client
@@ -143,16 +217,40 @@ sequenceDiagram
     AuthService-->>Client: JWT token
 ```
 
+## Diagram Storage
+
+```
+architecture/
+├── diagrams/
+│   ├── system-overview.mmd    # Mermaid source
+│   ├── system-overview.svg    # Generated image
+│   ├── data-model.mmd
+│   ├── data-model.svg
+│   ├── auth-flow.mmd
+│   └── auth-flow.svg
+├── README.md                   # Links to diagrams
+└── ...
+```
+
 ## Example Output
 
 ```json
 {
   "docsUpdated": [
-    "architecture/system-overview.md",
+    "architecture/README.md",
     "architecture/api/endpoints.md",
     "architecture/database/schema.md",
-    "architecture/components/catalog.md",
-    "README.md"
+    "architecture/components/catalog.md"
+  ],
+  "diagramsGenerated": [
+    "architecture/diagrams/system-overview.mmd",
+    "architecture/diagrams/data-model.mmd",
+    "architecture/diagrams/auth-flow.mmd"
+  ],
+  "imagesCreated": [
+    "architecture/diagrams/system-overview.svg",
+    "architecture/diagrams/data-model.svg",
+    "architecture/diagrams/auth-flow.svg"
   ],
   "systemsAdded": [
     "AuthService - JWT-based authentication",
@@ -165,7 +263,7 @@ sequenceDiagram
     "User Model - Added auth methods"
   ],
   "commitHash": "d4e5f6a7b8c9",
-  "summary": "Updated architecture documentation for authentication system including system overview, API endpoints, database schema, and component catalog. Added Mermaid diagrams for visual reference."
+  "summary": "Updated architecture documentation for authentication system including system overview, API endpoints, database schema, and component catalog. Generated 3 Mermaid diagrams (system-overview, data-model, auth-flow) and linked in README."
 }
 ```
 
@@ -190,9 +288,35 @@ sequenceDiagram
 - Add code snippets for examples
 - Use consistent styling
 
+## Archiving Completed Work
+
+After architecture documentation is committed, call `archive-work` agent to:
+
+1. **Remove from active files** - Clean up todo.md, ROADMAP.md
+2. **Move artifacts** - Research, plans, work state to archive
+3. **Update done.md** - Add entry with summary and links
+4. **Clear workflow state** - Reset for next work item
+
+```typescript
+// After successful architecture commit
+await callAgent('archive-work', {
+  workItem: workItemSlug,
+  commits: [redCommit, greenCommit, refactorCommit, docsCommit],
+  summary: architectureSummary,
+  requirements: addressedRequirements
+})
+```
+
+This ensures:
+- `todo.md` only shows pending/in-progress work
+- `.agents/research/` and `.agents/plans/` only contain active artifacts
+- Context window usage is minimized when checking "what's next"
+- Complete history preserved in `.agents/archive/done.md`
+
 ## Integration
 
 - Called after all RPI phases complete
 - Receives context from all phases
 - Final commit in the 4-commit cycle
+- Triggers `archive-work` agent to clean up and archive
 - Docs serve as source of truth for future work

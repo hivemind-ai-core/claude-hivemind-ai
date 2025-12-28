@@ -35,15 +35,19 @@ const SKILL_KEYWORDS: Record<string, string[]> = {
   'rust-services': ['rust', 'axum', 'tokio', 'cargo'],
   'python-service': ['fastapi', 'python', 'pip', 'async'],
   'python-analytics': ['pandas', 'numpy', 'sklearn', 'data', 'analytics', 'ml'],
+  'diagrams': ['diagram', 'mermaid', 'flowchart', 'sequence', 'er diagram', 'state diagram', 'class diagram', 'visualization', 'chart', 'architecture diagram'],
 }
 
 // Detect skills needed based on prompt keywords
+// Requires 2+ keyword matches to reduce false positives from common words
 function detectSkills(prompt: string): string[] {
   const lowerPrompt = prompt.toLowerCase()
   const detectedSkills: string[] = []
 
   for (const [skill, keywords] of Object.entries(SKILL_KEYWORDS)) {
-    if (keywords.some(keyword => lowerPrompt.includes(keyword))) {
+    const matchCount = keywords.filter(keyword => lowerPrompt.includes(keyword)).length
+    // Require 2+ matches to activate skill (reduces noise from common words like "test", "api")
+    if (matchCount >= 2) {
       detectedSkills.push(skill)
     }
   }
@@ -61,10 +65,54 @@ function buildSkillContext(skills: string[]): string {
 
 // PreToolUse handler - validate workflow rules
 const preToolUse = async (payload: PreToolUsePayload): Promise<PreToolUseResponse> => {
-  const { tool_name, tool_input } = payload
+  const { tool_name, tool_input, session_id } = payload
 
-  // For Edit/Write tools, we could enforce phase rules here
-  // But for now, we'll let the agents handle this
+  // Only enforce for Edit/Write tools
+  if (tool_name !== 'Edit' && tool_name !== 'Write') {
+    return {}
+  }
+
+  const input = tool_input as { file_path?: string }
+  const filePath = input?.file_path || ''
+
+  // Skip enforcement for .agents directory (workflow files)
+  if (filePath.includes('.agents/') || filePath.includes('.agents\\')) {
+    return {}
+  }
+
+  // Try to get workflow state (need cwd from session or default)
+  // Note: preToolUse doesn't have transcript_path, so we try common locations
+  const possibleCwds = [process.cwd(), '.']
+  let workflow: WorkflowState | null = null
+
+  for (const cwd of possibleCwds) {
+    workflow = readWorkflowState(cwd)
+    if (workflow) break
+  }
+
+  if (!workflow?.currentPhase) {
+    return {} // No active phase, allow all edits
+  }
+
+  const isTestFile = filePath.includes('.test.') ||
+                     filePath.includes('.spec.') ||
+                     filePath.includes('__tests__')
+
+  // RED phase: only allow test file edits
+  if (workflow.currentPhase === 'red' && !isTestFile) {
+    return {
+      decision: 'block',
+      reason: `RED phase active: only test files can be edited. Current file: ${filePath}. Edit a .test.ts file instead or complete RED phase first.`
+    }
+  }
+
+  // GREEN phase: don't modify test files
+  if (workflow.currentPhase === 'green' && isTestFile) {
+    return {
+      decision: 'block',
+      reason: `GREEN phase active: test files cannot be modified. Tests define the spec. Fix implementation code instead.`
+    }
+  }
 
   return {}
 }
@@ -72,6 +120,7 @@ const preToolUse = async (payload: PreToolUsePayload): Promise<PreToolUseRespons
 // UserPromptSubmit handler - auto-detect skills
 const userPromptSubmit = async (payload: UserPromptSubmitPayload): Promise<UserPromptSubmitResponse> => {
   const { prompt } = payload
+  const lowerPrompt = prompt.toLowerCase()
 
   // Detect relevant skills
   const detectedSkills = detectSkills(prompt)
@@ -80,8 +129,17 @@ const userPromptSubmit = async (payload: UserPromptSubmitPayload): Promise<UserP
   // Build context files list
   const contextFiles: string[] = []
 
-  // Always include core workflow files
-  contextFiles.push('.agents/context/artifacts.md')
+  // Only include workflow files for workflow-related prompts
+  const isWorkflowPrompt = lowerPrompt.includes('/work') ||
+                           lowerPrompt.includes('todo') ||
+                           lowerPrompt.includes('research') ||
+                           lowerPrompt.includes('phase') ||
+                           lowerPrompt.includes('roadmap') ||
+                           lowerPrompt.includes('rpi')
+
+  if (isWorkflowPrompt) {
+    contextFiles.push('.agents/context/artifacts.md')
+  }
 
   // Add detected skill files
   for (const skill of detectedSkills) {
@@ -129,11 +187,12 @@ interface WorkflowState {
 }
 
 // Todo file parsing
+// Note: No 'completed' status - completed items are archived to .agents/archive/done.md
 interface TodoItem {
   slug: string
-  status: 'in-progress' | 'up-next' | 'completed'
+  status: 'in-progress' | 'up-next'
   description: string
-  section: 'In Progress' | 'Up Next' | 'Completed'
+  section: 'In Progress' | 'Up Next'
 }
 
 // Helper to read workflow.json
@@ -177,10 +236,10 @@ function parseTodoFile(cwd: string): TodoItem[] {
     const content = fs.readFileSync(todoPath, 'utf-8')
     const items: TodoItem[] = []
 
-    const sections: Array<{name: 'In Progress' | 'Up Next' | 'Completed', prefix: 'in-progress' | 'up-next' | 'completed'}> = [
+    // Only parse active sections - completed items are archived to .agents/archive/done.md
+    const sections: Array<{name: 'In Progress' | 'Up Next', prefix: 'in-progress' | 'up-next'}> = [
       {name: 'In Progress', prefix: 'in-progress'},
       {name: 'Up Next', prefix: 'up-next'},
-      {name: 'Completed', prefix: 'completed'},
     ]
 
     for (const section of sections) {
@@ -218,18 +277,27 @@ function getCurrentWorkItemFromTodo(cwd: string): string | null {
   return inProgress?.slug || null
 }
 
+// Helper to check if a work item is archived (completed)
+function isWorkItemArchived(cwd: string, slug: string): boolean {
+  try {
+    const donePath = path.join(cwd, '.agents', 'archive', 'done.md')
+    if (!fs.existsSync(donePath)) {
+      return false
+    }
+    const content = fs.readFileSync(donePath, 'utf-8')
+    // Check if the slug appears as a completed item header
+    const headerRegex = new RegExp(`^###\\s+${slug}\\s*$`, 'm')
+    return headerRegex.test(content)
+  } catch (error) {
+    log('Error checking archive:', error)
+    return false
+  }
+}
+
 // Helper to update workflow state from todo file
+// Note: Completed items are NOT tracked here - they're archived to .agents/archive/done.md
 function syncWorkflowFromTodo(cwd: string, workflow: WorkflowState): void {
   const items = parseTodoFile(cwd)
-
-  // Update completed items from todo file
-  const completedSlugs = items
-    .filter(i => i.status === 'completed')
-    .map(i => i.slug)
-
-  if (completedSlugs.length > 0) {
-    workflow.completedItems = completedSlugs
-  }
 
   // Update current work item if not set
   if (!workflow.currentWorkItem) {
@@ -276,10 +344,10 @@ const stop = async (payload: StopPayload): Promise<StopResponse> => {
     return {}
   }
 
-  const { workUntil, currentWorkItem, completedItems = [] } = workflow
+  const { workUntil, currentWorkItem } = workflow
 
-  // Check if the target work item is completed
-  const targetCompleted = completedItems.includes(workUntil)
+  // Check if the target work item is archived (completed)
+  const targetCompleted = isWorkItemArchived(cwd, workUntil)
 
   // Check if current work item matches the target
   const isCurrentTarget = currentWorkItem === workUntil
@@ -350,28 +418,22 @@ const postToolUse = async (payload: PostToolUsePayload): Promise<PostToolUseResp
       workflow.currentPhase = 'refactor'
     } else if (commitMsg.match(/^docs\(.+:\s*update\s+architecture/i)) {
       // Architecture update complete - work item is done!
+      // Note: The archive-work agent will handle:
+      // - Removing item from todo.md and ROADMAP.md
+      // - Moving artifacts to archive
+      // - Adding entry to done.md
+      // - Clearing workflow state
       workflow.currentPhase = 'architecture'
 
       if (workflow.currentWorkItem) {
-        // Add to completed items
-        if (!workflow.completedItems) {
-          workflow.completedItems = []
-        }
-        if (!workflow.completedItems.includes(workflow.currentWorkItem)) {
-          workflow.completedItems.push(workflow.currentWorkItem)
-        }
-
-        // Clear current work item
+        const completedItem = workflow.currentWorkItem
+        // Clear current work item - archive-work agent will handle the rest
         workflow.currentWorkItem = undefined
         workflow.workItemStartedAt = undefined
-
-        // Update stats
-        if (workflow.stats) {
-          workflow.stats.completedWorkItems = workflow.completedItems.length
-        }
+        workflow.currentPhase = null
 
         writeWorkflowState(cwd, workflow)
-        log(`Work item completed: ${workflow.currentWorkItem}`)
+        log(`Work item completed: ${completedItem} - archive-work agent will handle archiving`)
       }
     }
 

@@ -76,13 +76,19 @@ canProceed = true when:
 
 4. **Verify Integration** (GREEN phase only)
    - Check that new code is reachable from application entry points
-   - Verify by project type:
-     - **API**: Endpoint registered in router
-     - **Frontend**: Component rendered in route or parent
-     - **Game**: Object added to scene, update() in game loop
-     - **CLI**: Command registered, reachable from entry point
-     - **Library**: Exported from package index
-   - Flag dead code as integration failure
+   - **Detect project type** from package.json dependencies:
+     - `hono`, `express`, `fastify` → **API**
+     - `react`, `vue`, `svelte` → **Frontend**
+     - `pixi.js`, `phaser` → **Game**
+     - No framework + `bin` field → **CLI**
+     - `main` or `exports` field → **Library**
+   - **Verify by project type**:
+     - **API**: Search for route registration (e.g., `app.get`, `router.post`)
+     - **Frontend**: Search for component import in routes or parent
+     - **Game**: Search for `addChild`, `stage.add`, or `update` registration
+     - **CLI**: Search for command registration in entry point
+     - **Library**: Check exports in `index.ts` or package.json `exports`
+   - Flag dead code (unreachable from entry points) as integration failure
 
 5. **Evaluate Gate**
    - Apply phase-specific rules

@@ -56,6 +56,19 @@ Use the `update-architecture` agent to:
 - Update architecture docs
 - Commit: `docs(<scope>): update architecture`
 
+### 6. ARCHIVE Phase
+Use the `archive-work` agent to:
+- Remove completed item from `todo.md` (not mark complete - REMOVE it)
+- Remove completed item from `ROADMAP.md`
+- Move `.agents/research/{slug}.md` to `.agents/archive/research/`
+- Move `.agents/plans/{slug}-*.md` to `.agents/archive/plans/`
+- Move `.agents/work/{slug}/` to `.agents/archive/work/`
+- Add entry to `.agents/archive/done.md` with summary and commit links
+- Update all index files
+- Clear workflow state for next item
+
+**Goal**: Keep active files lean to minimize context usage when starting next work item.
+
 ## Output
 
 Display progress for each phase:
@@ -86,7 +99,13 @@ REFACTOR phase: Improving...
 Architecture updated
 ✓ Committed: docs(<scope>): <message> [<hash>]
 
-✓ Work complete!
+Archiving completed work...
+✓ Removed from todo.md
+✓ Removed from ROADMAP.md
+✓ Moved artifacts to archive
+✓ Added to done.md
+
+✓ Work complete! Ready for next item.
 ```
 
 ## Error Handling

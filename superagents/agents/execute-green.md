@@ -37,12 +37,7 @@ Process one failing test at a time:
 
 ## Go and See
 
-Before each edit:
-1. Read the actual file (not from research or memory)
-2. Understand current state
-3. Then make the change
-
-Research may be stale. The file is truth.
+Read actual files before editing. Research may be stale - the file is truth.
 
 ## Eliminate Waste
 
@@ -91,3 +86,25 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 2. **Go and see** - Read files before editing
 3. **Minimal code** - Only what tests require
 4. **All tests pass** - 100% required for commit
+
+## Common Failures & Recovery
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| "Module not found" | Missing export | Add export to index.ts |
+| Type mismatch | Interface changed | Update type definition to match test |
+| Tests timeout | Async not awaited | Add await, check Promise handling |
+| Wrong return value | Misread test expectation | Re-read test assertions carefully |
+| Integration failure | Code not wired in | Register route/component/export |
+
+## Recovery from Failure
+
+If stuck with partial progress (some tests pass, some fail):
+
+1. **Stash changes**: `git stash` to save current work
+2. **Identify blocker**: Which test is problematic? Why?
+3. **Options**:
+   - **Simplify test**: Return to RED, split complex test into smaller ones
+   - **Fix approach**: Different implementation strategy
+   - **Flag for human**: Report specific blocker, don't guess
+4. **Never commit partial work** - Either all tests pass or no commit

@@ -1,0 +1,16 @@
+# Architecture Diagrams
+
+This directory contains Mermaid diagram sources (.mmd) and generated images (.svg).
+
+## Usage
+
+- Place .mmd files here for architecture diagrams
+- Run diagram-to-image agent to convert to SVG
+- Reference in markdown: `![Diagram](./diagrams/name.svg)`
+
+## Naming Convention
+
+- system-overview.mmd - System component layout
+- data-flow.mmd - Request/response flows
+- data-model.mmd - ER diagram of entities
+- {feature}-flow.mmd - Feature-specific flows

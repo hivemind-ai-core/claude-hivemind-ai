@@ -171,6 +171,15 @@ If tests pass or have syntax errors:
 }
 ```
 
+## Common Failures & Recovery
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Tests pass (should fail) | Implementation already exists | Remove implementation or skip that test |
+| Syntax errors | Invalid test code | Fix imports, typos, async/await |
+| "Module not found" | Missing test framework | Run `npm install` or check test config |
+| Timeout errors | Async not mocked | Add mocks for async operations |
+
 ## Integration
 
 - Receives research file path from explore-context

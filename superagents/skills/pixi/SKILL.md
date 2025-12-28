@@ -12,7 +12,12 @@
 - **@pixi/ui** - UI components
 - **@pixi/sound** - Audio support
 
-For full API reference, see [reference.md](reference.md).
+## API Reference
+
+**WARNING**: `reference.md` is 250KB+ (7000+ lines). Do NOT read it fully.
+- Use `Grep` to search for specific API methods
+- Read only the section you need with offset/limit
+- Example: `Grep pattern="class Sprite" path="skills/pixi/reference.md"`
 
 ## Setup
 

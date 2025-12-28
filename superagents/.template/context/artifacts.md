@@ -102,3 +102,29 @@ another.md -- Another description -- tag4, tag5
 - Delete research/plan files after work item complete
 - Archive important learnings to `.agents/patterns/` or `.agents/mistakes/`
 - Update index.md files when adding/removing files
+
+## Token Budgets
+
+Standardized limits for all workflow components:
+
+| Artifact | Target Size | Notes |
+|----------|-------------|-------|
+| **Research file** | ~3-5k tokens | Focus on requirements, file paths, risks. Point to sources, don't duplicate. |
+| **Plan file** | ~3-5k tokens | Concise steps. Detailed code comes from reading files during execution. |
+| **Agent output** | ~500-1k tokens | Summary object only. Details are in saved files. |
+
+| Agent Phase | Input Budget | Peak Usage | Output |
+|-------------|--------------|------------|--------|
+| explore-context | ~5k (todo + spec refs) | ~15k | ~500 bytes + research file |
+| plan | ~8k (research + phase context) | ~15k | ~500 bytes + plan file |
+| execute-red | ~8k (research + test context) | ~25k | ~1k summary |
+| execute-green | ~8k (research + red plan) | ~30k | ~1k summary |
+| execute-refactor | ~8k (research + green plan) | ~25k | ~1k summary |
+| verify-results | ~2k (test command) | ~5k | ~500 bytes |
+
+### Why These Limits?
+
+1. **Fresh context per phase** - Each phase starts clean, reads from files
+2. **Small outputs** - Pass file paths, not content
+3. **Disk is cheap** - Write to files, reference by path
+4. **Total under 40k** - Keep well below model limits for response room

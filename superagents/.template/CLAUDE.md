@@ -1,5 +1,7 @@
 # RPI Workflow
 
+<!-- superagents:1.0.1 -->
+
 Research-Plan-Implement with TDD. Quality built in, not inspected in.
 
 ## Core Principles
@@ -26,10 +28,10 @@ The `verify-results` agent gates all commits. `canProceed: true` required.
 ## Workflow
 
 ```
-/work → research → RED → GREEN → REFACTOR → architecture
-                    ↓       ↓         ↓
-                 tests   one test   one change
-                 fail    at a time  at a time
+/work → research → RED → GREEN → REFACTOR → architecture → archive
+                    ↓       ↓         ↓            ↓           ↓
+                 tests   one test   one change   docs    remove from
+                 fail    at a time  at a time   update   active files
 ```
 
 ## Phase Rules
@@ -40,6 +42,7 @@ The `verify-results` agent gates all commits. `canProceed: true` required.
 | RED | Write 1-5 tests for work item | Tests fail correctly |
 | GREEN | Pass one test, then next | 100% pass, zero type errors, integrated |
 | REFACTOR | One change, verify, next | 100% pass, zero type errors |
+| ARCHIVE | Remove from active, move to archive | Item in done.md, artifacts archived |
 
 ## Workflow Artifacts
 
@@ -71,6 +74,8 @@ REFACTOR reads all above → writes .agents/plans/{slug}-refactor.md
 | Research artifacts | `.agents/research/` |
 | Phase plans | `.agents/plans/` |
 | Work state | `.agents/work/` |
+| **Completed work** | `.agents/archive/done.md` |
+| Archived artifacts | `.agents/archive/` |
 | Phase guidance | `.agents/context/phase-*.md` |
 | Artifact guidance | `.agents/context/artifacts.md` |
 | Patterns | `.agents/patterns/` |
@@ -87,9 +92,40 @@ Each directory has an `index.md` for fast navigation:
 
 Read index files first to find relevant files without searching.
 
+## Archiving Completed Work
+
+**Goal**: Minimize context usage by keeping active files lean.
+
+When a work item completes:
+1. **Removed** from `todo.md` (not marked complete - REMOVED)
+2. **Removed** from `ROADMAP.md`
+3. **Moved** to archive: research, plans, work state
+4. **Entry added** to `.agents/archive/done.md`
+
+### Archive Structure
+
+```
+.agents/archive/
+├── done.md              # List of completed work with summaries
+├── research/            # Archived research artifacts
+├── plans/               # Archived execution plans
+└── work/                # Archived work state files
+```
+
+### Why Archive?
+
+- `todo.md` only shows pending/in-progress work
+- `ROADMAP.md` only shows remaining phases
+- Research/plans directories only contain active work
+- Context window usage minimized when checking "what's next"
+
+To view history: read `.agents/archive/done.md`
+
 ## Commands
 
 - `/work` - Execute RPI workflow for next todo
 - `/update-roadmap` - Generate roadmap from spec
 - `/project-status` - Show current state
 - `/fix-tests` - Systematic test repair
+- `/update-architecture` - Update architecture docs with diagrams
+- `/create-spec` - Interactive spec creation/amendment
