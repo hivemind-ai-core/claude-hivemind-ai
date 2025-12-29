@@ -162,7 +162,7 @@ const sessionStart = async (payload: SessionStartPayload): Promise<SessionStartR
     decision: 'approve',
     hookSpecificOutput: {
       hookEventName: 'SessionStart',
-      additionalContext: `Superagents RPI workflow active. Commands: /work, /backlog, /queue-add, /queue-status, /update-roadmap, /project-status, /fix-tests`,
+      additionalContext: `Superagents RPI workflow active. Commands: /work, /backlog, /queue-add, /queue-status, /update-roadmap, /project-status, /fix-tests, /janitor`,
     },
   }
 }

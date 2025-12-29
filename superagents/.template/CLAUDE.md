@@ -145,3 +145,4 @@ To view history: read `.agents/archive/index.md`
 - `/fix-tests` - Systematic test repair
 - `/update-architecture` - Update architecture docs with diagrams
 - `/create-spec` - Interactive spec creation/amendment
+- `/janitor` - Clean up stale files and orphaned work items

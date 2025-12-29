@@ -63,9 +63,13 @@ Executes the RPI cycle for the next todo:
 |---------|-------------|
 | `/setup` | Initialize .agents directory and update CLAUDE.md |
 | `/work` | Execute RPI workflow for next todo |
+| `/backlog` | Add work items interactively |
+| `/queue-add` | Move items from backlog to queue |
+| `/queue-status` | Show current queue state |
 | `/update-roadmap` | Regenerate roadmap from spec |
 | `/fix-tests` | Systematic test repair |
 | `/project-status` | Show current state and progress |
+| `/janitor` | Clean up stale files and orphaned work items |
 
 ## Agents
 
