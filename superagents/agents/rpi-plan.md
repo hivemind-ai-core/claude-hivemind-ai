@@ -83,6 +83,7 @@ Write to `.agents/work/{slug}/{phase}-plan.md`:
 - Files to create: N
 - Files to modify: N
 - Tests to pass: N
+- Integration target: {specific file where code will be wired in}
 
 ## Implementation Steps
 
@@ -95,9 +96,25 @@ Write to `.agents/work/{slug}/{phase}-plan.md`:
 - Signature: {from test expectations}
 - Logic: {key implementation points}
 
-### Step 3: Integration
-- Wire into: {where to connect}
-- Exports: {what to export}
+### Step 3: Integration (MANDATORY)
+
+**Integration is not optional. Dead code is a GREEN phase failure.**
+
+Detect project type and specify exact integration point:
+
+| Project Type | Integration File | Integration Code |
+|-------------|------------------|------------------|
+| API (hono/express/fastify) | `src/routes/index.ts` | `router.route('/path', handler)` |
+| Frontend (react/vue/svelte) | `src/routes.tsx` or parent | `<Route path="/x" component={X}/>` |
+| Game (pixi/phaser) | `src/scenes/MainScene.ts` | `this.addChild(obj)` or `update()` call |
+| CLI | `src/cli.ts` or entry point | `commands.register('name', handler)` |
+| Library | `src/index.ts` | `export { Feature } from './feature'` |
+
+For this work item:
+- **Project type**: {API|Frontend|Game|CLI|Library}
+- **Integration file**: {exact path}
+- **Integration code**: {exact code to add}
+- **Import statement**: {what to import}
 
 ## Dependencies
 - Install: {packages if any}
@@ -108,7 +125,8 @@ Write to `.agents/work/{slug}/{phase}-plan.md`:
 - [ ] Run tests
 - [ ] Implement next test case
 - [ ] Repeat until all pass
-- [ ] Verify integration
+- [ ] **INTEGRATE: Add to {integration file}** ← NOT OPTIONAL
+- [ ] Verify integration (feature accessible to user)
 ```
 
 #### REFACTOR Phase Plan Format

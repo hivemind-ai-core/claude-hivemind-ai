@@ -6,6 +6,16 @@ description: Execute the RPI workflow (Research-Plan-Implement with TDD) for the
 
 Execute the RPI workflow for queued items. **Continues automatically until queue is empty.**
 
+## AUTONOMOUS OPERATION RULES
+
+**THIS IS A FULLY AUTONOMOUS COMMAND. DO NOT ASK FOR PERMISSION TO CONTINUE.**
+
+1. Process each work item in the queue
+2. After completing one item, **immediately** start the next
+3. **NEVER** ask "Would you like me to continue?" or wait for user input
+4. **ONLY** stop when the queue is empty or an unrecoverable error occurs
+5. The Stop hook will block any premature stop attempts - this is by design
+
 ## Process
 
 ### 0. Get Next Queued Item
@@ -86,7 +96,7 @@ After queue files are updated, create a final commit for housekeeping:
 
 **CRITICAL**: This commit ensures all queue/workflow state changes are tracked in git.
 
-### 8. CONTINUE (Loop)
+### 8. CONTINUE (Loop) - MANDATORY AUTO-CONTINUE
 
 After archiving, check queue for more items:
 
@@ -94,11 +104,20 @@ After archiving, check queue for more items:
 if queued.md has items in "## Up Next":
     → Go back to Step 0 (Get Next Queued Item)
     → Process next item automatically
+    → DO NOT ASK THE USER - just continue
 else:
     → Report "Queue empty" and stop
 ```
 
-**IMPORTANT**: This command loops until the queue is empty. Each item uses sub-agents to keep context fresh, so the loop can continue indefinitely.
+**CRITICAL - AUTONOMOUS OPERATION**:
+- This command loops **automatically** until the queue is empty
+- **NEVER** ask "Would you like me to continue?" or similar questions
+- **NEVER** stop to wait for user confirmation between work items
+- **ALWAYS** proceed to the next item immediately after completing one
+- The only valid reason to stop is: queue is empty OR unrecoverable error
+- Each item uses sub-agents to keep context fresh, so the loop can continue indefinitely
+
+If you find yourself about to ask "should I continue?" - DON'T. Just continue.
 
 ## Output
 

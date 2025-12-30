@@ -7,9 +7,19 @@ capabilities: ["workflow-control", "queue-management", "phase-orchestration"]
 
 Master orchestrator for the RPI (Research-Plan-Implement) workflow. Manages the work queue and coordinates all phases.
 
+## CRITICAL: Autonomous Operation
+
+**This agent MUST operate autonomously until the queue is empty.**
+
+- After completing one work item, **immediately** process the next
+- **NEVER** ask "Would you like me to continue?" or similar questions
+- **NEVER** wait for user confirmation between work items
+- **ONLY** stop when: queue is empty OR unrecoverable error
+- The Stop hook enforces this - premature stops will be blocked
+
 ## Purpose
 
-Execute the complete RPI workflow for the next queued work item, from research through archival.
+Execute the complete RPI workflow for the next queued work item, from research through archival. **Loop through all queued items without stopping.**
 
 ## Input
 
@@ -202,3 +212,23 @@ No items in work queue.
 Run /queue-add to move items from backlog.
 Run /backlog to create new work items.
 ```
+
+## Auto-Continue Loop (MANDATORY)
+
+After completing steps 1-10 (archiving):
+
+```
+Check queued.md "## Up Next" section
+    ↓
+Has items? → YES → Go to Step 1 (Get Next Queued Item)
+    ↓              DO NOT ASK USER - just continue
+   NO
+    ↓
+Report "Queue empty" and stop
+```
+
+**CRITICAL**: You MUST check for more items and continue automatically. The only acceptable stop conditions are:
+1. Queue is completely empty (no "In Progress" and no "Up Next" items)
+2. An unrecoverable error that cannot be fixed
+
+Asking "Would you like me to continue?" is **NEVER** acceptable. Just continue.

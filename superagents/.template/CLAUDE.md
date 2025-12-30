@@ -40,9 +40,20 @@ The `verify-results` agent gates all commits. `canProceed: true` required.
 |-------|------|------|
 | RESEARCH | Read spec, code, architecture | Research artifact written |
 | RED | Write 1-5 tests for work item | Tests fail correctly |
-| GREEN | Pass one test, then next | 100% pass, zero type errors, integrated |
+| GREEN | Pass one test, then next, **then integrate** | 100% pass, zero type errors, **integrated** |
 | REFACTOR | One change, verify, next | 100% pass, zero type errors |
 | ARCHIVE | Move work dir to archive | Item in completed.md, artifacts archived |
+
+### GREEN Phase Integration Requirement
+
+**Integration is an implementation step, not just a verification.**
+
+GREEN phase is NOT complete until:
+1. All tests pass (100%)
+2. Zero type errors
+3. **Code is wired into the application** (user can access the feature)
+
+Dead code = incomplete GREEN phase. The plan MUST specify the integration point, and implementation MUST include adding the code to that integration point.
 
 ## Queue System
 

@@ -36,17 +36,38 @@ Implement **one test at a time**:
 
 **Do NOT implement everything at once.** This catches errors early.
 
-## Integration Check
+## Integration (MANDATORY IMPLEMENTATION STEP)
 
-New code MUST be wired into the application:
+**Integration is an implementation step, not just a verification check.**
 
-- **API**: Endpoint registered in router
-- **Frontend**: Component rendered in route or parent
-- **Game**: Object added to scene, update() called
-- **CLI**: Command registered in entry point
-- **Library**: Exported from package index
+After all tests pass, you MUST wire the code into the application. This is not optional.
 
-Dead code is a GREEN phase failure.
+### Integration Workflow
+
+1. **Identify integration point** (from plan)
+2. **Read the integration file** (go and see)
+3. **Add import statement** for new code
+4. **Add integration code** to wire feature in
+5. **Verify feature is accessible** to user
+
+### Integration by Project Type
+
+| Type | Integration File | What to Add |
+|------|------------------|-------------|
+| **API** | Router file (routes/index.ts) | `router.route('/path', handler)` |
+| **Frontend** | Routes or parent component | `<Route path="/x" component={X}/>` |
+| **Game** | Scene file | `this.addChild(obj)` or call in `update()` |
+| **CLI** | Entry point (cli.ts) | `commands.register('name', handler)` |
+| **Library** | Package index (index.ts) | `export { Feature } from './feature'` |
+
+### Dead Code = Failure
+
+Code that exists but is not reachable from the application is **dead code**.
+
+Dead code means GREEN phase is **incomplete**. The work item is NOT done until:
+- Feature is wired into the application
+- User can access/use the feature
+- Integration is committed
 
 ## Go and See
 

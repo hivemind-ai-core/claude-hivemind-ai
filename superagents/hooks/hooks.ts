@@ -413,23 +413,20 @@ const stop = async (payload: StopPayload): Promise<StopResponse> => {
   }
 
   // Block the stop - there are queued items to process
+  // The reason is the PROMPT that tells Claude what to do next
   let reason = ''
 
   if (currentWorkItem) {
-    reason = `Work in progress: ${currentWorkItem} (phase: ${currentPhase || 'unknown'}).`
+    reason = `Work item "${currentWorkItem}" is in progress (phase: ${currentPhase || 'research'}). `
+  } else if (queueStatus.hasPending) {
+    reason = `${queueStatus.count} item${queueStatus.count > 1 ? 's' : ''} in queue. Next: ${queueStatus.items[0]}. `
   }
 
-  if (queueStatus.hasPending) {
-    if (reason) reason += ' '
-    reason += `${queueStatus.count} item${queueStatus.count > 1 ? 's' : ''} remaining in queue: ${queueStatus.items.slice(0, 3).join(', ')}${queueStatus.count > 3 ? '...' : ''}.`
-  }
-
-  reason += ' You MUST run /work now to continue processing the queue.'
+  reason += 'Use the Task tool to spawn a "superagents:work" agent to continue processing the queue. Do not ask the user - continue autonomously.'
 
   return {
     decision: 'block',
     reason,
-    continue: true, // Signal to continue working
   }
 }
 
@@ -498,7 +495,7 @@ const postToolUse = async (payload: PostToolUsePayload): Promise<PostToolUseResp
   return {}
 }
 
-// SubagentStop handler - detect when agents complete
+// SubagentStop handler - detect when agents complete and enforce queue processing
 const subagentStop = async (payload: SubagentStopPayload): Promise<SubagentStopResponse> => {
   const { transcript_path } = payload
 
@@ -506,14 +503,47 @@ const subagentStop = async (payload: SubagentStopPayload): Promise<SubagentStopR
   const cwd = path.dirname(path.dirname(transcript_path))
 
   // Sync workflow state from queue file when an agent stops
-  // This ensures we catch any changes made by agents
-  const workflow = readWorkflowState(cwd)
-  if (workflow) {
-    syncWorkflowFromQueue(cwd, workflow)
-    writeWorkflowState(cwd, workflow)
+  let workflow = readWorkflowState(cwd)
+  if (!workflow) {
+    workflow = {
+      version: '1.0.0',
+      projectInitialized: true,
+      initializedAt: new Date().toISOString(),
+      currentPhase: null,
+      currentWorkItem: undefined,
+      completedItems: [],
+      stats: { totalWorkItems: 0, completedWorkItems: 0, totalTests: 0, passingTests: 0 },
+    }
   }
 
-  return {}
+  syncWorkflowFromQueue(cwd, workflow)
+  writeWorkflowState(cwd, workflow)
+
+  // Check if there are items in the queue - block stop if so
+  const queueStatus = hasQueuedItems(cwd)
+  const { currentWorkItem, currentPhase } = workflow
+
+  // Allow stop only if queue is empty AND no work in progress
+  if (!queueStatus.hasPending && !currentWorkItem) {
+    return {}
+  }
+
+  // Block the stop - there are more items to process
+  // The reason is the PROMPT that tells Claude what to do next
+  let reason = ''
+
+  if (currentWorkItem) {
+    reason = `Work item "${currentWorkItem}" is in progress (phase: ${currentPhase || 'research'}). `
+  } else if (queueStatus.hasPending) {
+    reason = `${queueStatus.count} item${queueStatus.count > 1 ? 's' : ''} in queue. Next: ${queueStatus.items[0]}. `
+  }
+
+  reason += 'Use the Task tool to spawn a "superagents:work" agent to continue processing the queue. Do not ask the user - continue autonomously.'
+
+  return {
+    decision: 'block',
+    reason,
+  }
 }
 
 // Run the hook

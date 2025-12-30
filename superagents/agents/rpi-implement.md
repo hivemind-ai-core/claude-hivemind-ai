@@ -50,14 +50,20 @@ Read `.agents/work/{slug}/{phase}-plan.md`.
    - Write minimal code to pass ONE test
    - Run tests
    - Repeat until all tests pass
-2. Verify integration (code is wired in)
-3. Update report.md with GREEN section
+2. **INTEGRATE the code** (MANDATORY - not just verification):
+   - Read the integration file specified in the plan
+   - Add the import statement
+   - Add the integration code (route registration, component rendering, export, etc.)
+   - This step is NOT optional - dead code is a GREEN phase failure
+3. Verify integration works (feature is accessible to user)
+4. Update report.md with GREEN section
 
 **Rules**:
 - One test at a time
 - Write ONLY what tests require
 - Go and see before editing
 - 100% pass rate required
+- **Integration is implementation, not just verification**
 
 #### REFACTOR Phase (Improve Code)
 

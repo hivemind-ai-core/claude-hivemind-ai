@@ -101,12 +101,43 @@ canProceed = true when:
 
 ## Strict Enforcement
 
-**GREEN and REFACTOR phases require 100% pass rate.**
+**GREEN and REFACTOR phases require 100% pass rate AND integration.**
 
 If `canProceed === false`:
 - The calling agent MUST fix issues
 - The calling agent MUST call verify-results again
 - The calling agent MUST NOT commit until `canProceed === true`
+
+### Integration Failure Handling (GREEN phase)
+
+If `integrationVerified === false`:
+
+1. **This is NOT just a warning** - it's a blocking failure
+2. The calling agent MUST:
+   - Read the `integrationIssues` array
+   - For each issue, perform the integration (not just acknowledge it)
+   - Add missing imports to the integration file
+   - Add missing route/component/export registrations
+   - Re-run verify-results
+3. **Do NOT commit** until `integrationVerified === true`
+
+Integration failures mean the feature is **dead code** - it exists but users cannot access it. This is equivalent to incomplete implementation.
+
+### Integration Fix Loop
+
+```
+verify-results(phase: 'green')
+       ↓
+integrationVerified === false?
+       ↓ YES
+Read integrationIssues[].suggestion
+       ↓
+Edit integration file (add import + registration)
+       ↓
+verify-results(phase: 'green') ← LOOP BACK
+       ↓
+integrationVerified === true? → PROCEED TO COMMIT
+```
 
 ## Example Outputs
 

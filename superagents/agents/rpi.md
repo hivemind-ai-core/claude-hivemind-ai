@@ -58,20 +58,23 @@ Returns phase-specific results:
 
 ### GREEN Phase
 
-**Goal**: Write minimal code to pass all tests, one at a time.
+**Goal**: Write minimal code to pass all tests, one at a time, **then integrate**.
 
 **Process**:
 1. Call `rpi-research` → reads `research.md` + `report.md`, writes `green-research.md`
-2. Call `rpi-plan` → reads `green-research.md`, writes `green-plan.md`
-3. Call `rpi-implement` → writes implementation, updates `report.md`
-4. Call `verify-results(phase: 'green')` → gate: 100% pass, zero type errors, integrated
+2. Call `rpi-plan` → reads `green-research.md`, writes `green-plan.md` (MUST include integration point)
+3. Call `rpi-implement` → writes implementation + **integrates code**, updates `report.md`
+4. Call `verify-results(phase: 'green')` → gate: 100% pass, zero type errors, **integrated**
+   - If `integrationVerified === false`: FIX integration, then re-verify (loop)
 5. Call `git-commit` → `feat(scope): implement feature`
 
 **Gate Criteria**:
 - `passRate === 100`
 - `testsFailing === 0`
 - `typeErrors.length === 0`
-- `integrationVerified === true` (code is wired into app)
+- `integrationVerified === true` (code is wired into app - **blocking requirement**)
+
+**Integration is implementation, not just verification.** The plan specifies WHERE to integrate, and rpi-implement MUST add the code there. Dead code = incomplete GREEN phase.
 
 **Output**:
 ```json
