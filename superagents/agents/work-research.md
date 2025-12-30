@@ -1,11 +1,11 @@
 ---
-description: Research phase agent that gathers context for a work item
+description: Research phase agent - gathers context for a work item (leaf agent)
 capabilities: ["research", "context-gathering", "spec-analysis", "right-sizing"]
 ---
 
 # Agent: work-research
 
-Research phase: analyze work item definition against spec and architecture to prepare for implementation.
+**Leaf agent** - Does the research directly. Does NOT spawn other agents.
 
 ## Input
 
@@ -14,7 +14,7 @@ Research phase: analyze work item definition against spec and architecture to pr
 ## Output
 
 - `researchFile` - Path to saved research (`.agents/work/{slug}/research.md`)
-- `testCount` - Estimated number of tests (for heijunka check)
+- `testCount` - Estimated number of tests (for right-sizing check)
 - `summary` - Brief overview
 
 ## Process
@@ -24,34 +24,21 @@ Research phase: analyze work item definition against spec and architecture to pr
 Read `.agents/work/{slug}/definition.md`:
 - Extract description
 - Extract acceptance criteria
-- Note priority and any constraints
+- Note priority and constraints
 
-### 2. Load Relevant Context (Parallel Fan-Out)
+### 2. Gather Context (Do This Yourself)
 
-Use parallel Task agents to gather context simultaneously:
+Read these files directly (do NOT spawn sub-agents):
 
-```
-                    ┌─→ spec-reader agent ─────────→┐
-                    │                               │
-definition.md ──────┼─→ architecture-reader agent ─→┼──→ consolidate
-                    │                               │
-                    ├─→ code-scanner agent ────────→┤
-                    │                               │
-                    └─→ patterns-reader agent ─────→┘
-```
+| File/Directory | What to Extract |
+|----------------|-----------------|
+| `spec/*.md` | Requirements relevant to this work item |
+| `architecture/*.md` | System context, integration points |
+| `src/` | Related existing code patterns |
+| `.agents/patterns/index.md` | Applicable patterns |
+| `.agents/mistakes/index.md` | Warnings to avoid |
 
-**Launch 4 parallel agents** with `run_in_background: true`:
-
-| Agent | Task | Input | Output |
-|-------|------|-------|--------|
-| spec-reader | Find relevant spec sections | definition keywords | Relevant requirements |
-| architecture-reader | Find relevant architecture | definition keywords | System context |
-| code-scanner | Find related existing code | definition keywords | Related files, patterns |
-| patterns-reader | Check patterns + mistakes | definition keywords | Applicable patterns/warnings |
-
-**Consolidation**: Wait for all agents, merge findings into unified research.
-
-This reduces research time from ~4 sequential reads to ~1 parallel batch.
+Use Glob and Grep to find relevant files, then Read them.
 
 ### 3. Right-Size Check (Heijunka)
 
@@ -92,12 +79,12 @@ From spec:
 - Requirement 2
 
 ## Architecture Context
-From architecture docs:
 - Relevant system: X
 - Integration points: Y
 
-## Relevant Patterns
-- Pattern A (why relevant)
+## Existing Code Patterns
+- Pattern found in src/X
+- Similar implementation in src/Y
 
 ## Risks
 - Risk 1 (mitigation)
@@ -109,12 +96,9 @@ Brief recommended approach for implementation.
 High-level test scenarios:
 1. Test case 1
 2. Test case 2
-...
 ```
 
-Keep it focused. Details come from reading actual files during execution.
-
-## Output
+### 5. Return Result
 
 ```json
 {
@@ -126,23 +110,15 @@ Keep it focused. Details come from reading actual files during execution.
 
 ## Key Rules
 
-1. **Just-in-time** - Load only what's needed for this work item
-2. **Right-size** - Flag work items that need splitting (>5 tests)
-3. **Focused output** - Summary, not exhaustive analysis
-4. **Point to sources** - Reference files, don't duplicate content
-
-## Files Read
-
-| File | Purpose |
-|------|---------|
-| `.agents/work/{slug}/definition.md` | Work item requirements |
-| `spec/*.md` | Project specifications (selective) |
-| `architecture/*.md` | Architecture docs (selective) |
-| `.agents/patterns/index.md` | Pattern navigation |
-| `.agents/mistakes/index.md` | Mistake navigation |
+1. **You are a leaf agent** - Do NOT spawn other agents
+2. **Do the work yourself** - Read files directly using Read, Glob, Grep
+3. **Just-in-time** - Load only what's needed for this work item
+4. **Right-size** - Flag work items that need splitting (>5 tests)
+5. **Focused output** - Summary, not exhaustive analysis
+6. **Point to sources** - Reference file paths, don't duplicate content
 
 ## Token Budget
 
 - Input: ~3k tokens (definition + selective context)
 - Peak: ~12k tokens (with spec/architecture content)
-- Output: ~500 tokens (summary)
+- Output: ~500 tokens (summary + research file)

@@ -53,24 +53,16 @@ Scan modified files from git diff to understand what changed.
 
 ### 4. Generate Diagrams
 
-Call `diagram-generator` agent for each needed diagram:
+**Use Task tool to spawn diagram agents (do NOT use bash/CLI):**
 
-```typescript
-await callAgent('diagram-generator', {
-  source: 'src/',
-  type: 'flowchart',
-  focus: 'system overview',
-  outputPath: 'architecture/diagrams/system-overview.mmd'
-})
+```
+Task(superagents:diagram-generator, "Generate system overview diagram for {slug}")
 ```
 
-Call `diagram-to-image` agent to convert .mmd to SVG:
+Then convert to images:
 
-```typescript
-await callAgent('diagram-to-image', {
-  sourcePath: 'architecture/diagrams/',
-  format: 'svg'
-})
+```
+Task(superagents:diagram-to-image, "Convert diagrams to SVG in architecture/diagrams/")
 ```
 
 ### 5. Update Architecture Docs
@@ -86,7 +78,12 @@ Update relevant documentation files:
 
 ### 6. Commit Documentation
 
-Call `git-commit` agent:
+**Use Task tool (do NOT use bash/CLI):**
+
+```
+Task(superagents:git-commit, "Commit architecture docs for {slug}")
+```
+
 - Commit type: `docs`
 - Scope: `{slug}`
 - Message: `update architecture`

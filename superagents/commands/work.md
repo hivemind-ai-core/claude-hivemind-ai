@@ -4,29 +4,23 @@ description: Execute the RPI workflow (Research-Plan-Implement with TDD) for que
 
 # /work Command
 
-**This is a thin dispatcher. It just spawns the work agent.**
+Process the work queue by following the workflow in `.agents/context/work.md`.
 
-## What To Do
+## Instructions
 
-Use the Task tool to spawn a `superagents:work` agent:
+1. Read `.agents/context/work.md` for the complete workflow
+2. Follow the steps exactly as described
+3. Spawn leaf agents via Task tool (subagents cannot spawn subagents)
+4. Loop until queue is empty
+5. Do not ask the user - just execute
 
-```
-Task tool:
-  subagent_type: "superagents:work"
-  prompt: "Process the work queue. Continue until queue is empty."
-```
+## Quick Reference
 
-That's it. The work agent handles everything else:
-- Queue management (in-progress, up-next, completed)
-- Spawning RPI agents for each phase
-- Archiving completed work
-- Looping until queue is empty
+The workflow file tells you to:
+- Read `queued.md` for next item
+- For each phase (Research → RED → GREEN → REFACTOR → Architecture → Archive):
+  - Load phase context
+  - Spawn leaf agents: `rpi-research`, `rpi-plan`, `rpi-implement`, `verify-results`, `git-commit`
+- Update queue and loop
 
-## DO NOT
-
-- Do NOT read queue files yourself
-- Do NOT implement anything yourself
-- Do NOT manage workflow state yourself
-- Do NOT ask the user anything
-
-Just spawn the work agent and let it handle everything.
+**Start by reading `.agents/context/work.md`.**

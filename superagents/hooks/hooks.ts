@@ -417,12 +417,12 @@ const stop = async (payload: StopPayload): Promise<StopResponse> => {
   let reason = ''
 
   if (currentWorkItem) {
-    reason = `Work item "${currentWorkItem}" is in progress (phase: ${currentPhase || 'research'}). `
+    reason = `Work item "${currentWorkItem}" in progress (phase: ${currentPhase || 'research'}). `
+    reason += `Follow .agents/context/work.md to continue. Spawn fat phase agents: Task(superagents:rpi, phase=red|green|refactor). Do not ask the user.`
   } else if (queueStatus.hasPending) {
-    reason = `${queueStatus.count} item${queueStatus.count > 1 ? 's' : ''} in queue. Next: ${queueStatus.items[0]}. `
+    reason = `${queueStatus.count} item${queueStatus.count > 1 ? 's' : ''} queued. Next: "${queueStatus.items[0]}". `
+    reason += `Follow .agents/context/work.md workflow. Spawn: work-research, then rpi(phase=red), rpi(phase=green), rpi(phase=refactor), architecture, archive-work. Do not ask the user.`
   }
-
-  reason += 'Use the Task tool to spawn a "superagents:work" agent to continue processing the queue. Do not ask the user - continue autonomously.'
 
   return {
     decision: 'block',
@@ -533,12 +533,12 @@ const subagentStop = async (payload: SubagentStopPayload): Promise<SubagentStopR
   let reason = ''
 
   if (currentWorkItem) {
-    reason = `Work item "${currentWorkItem}" is in progress (phase: ${currentPhase || 'research'}). `
+    reason = `Work item "${currentWorkItem}" in progress (phase: ${currentPhase || 'research'}). `
+    reason += `Follow .agents/context/work.md. Spawn next phase agent. Do not ask the user.`
   } else if (queueStatus.hasPending) {
-    reason = `${queueStatus.count} item${queueStatus.count > 1 ? 's' : ''} in queue. Next: ${queueStatus.items[0]}. `
+    reason = `${queueStatus.count} item${queueStatus.count > 1 ? 's' : ''} queued. Next: "${queueStatus.items[0]}". `
+    reason += `Follow .agents/context/work.md workflow. Do not ask the user.`
   }
-
-  reason += 'Use the Task tool to spawn a "superagents:work" agent to continue processing the queue. Do not ask the user - continue autonomously.'
 
   return {
     decision: 'block',

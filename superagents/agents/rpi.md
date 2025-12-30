@@ -1,188 +1,230 @@
 ---
-description: Unified RPI agent - executes RED, GREEN, or REFACTOR phase based on parameter
-capabilities: ["tdd", "implementation", "refactoring", "phase-orchestration"]
+description: Unified RPI phase agent - executes RED, GREEN, or REFACTOR phase (fat leaf agent)
+capabilities: ["testing", "implementation", "refactoring", "verification", "commit"]
 ---
 
 # Agent: rpi
 
-Unified agent for RED, GREEN, and REFACTOR phases of TDD workflow.
+**Fat leaf agent** - Does all phase work internally. Does NOT spawn other agents.
+
+Handles RED, GREEN, or REFACTOR phase based on `phase` parameter.
 
 ## Input
 
-- `slug` - Work item slug
+- `slug` - Work item slug (directory name in `.agents/work/`)
 - `phase` - One of: `"red"` | `"green"` | `"refactor"`
 
 ## Output
 
-Returns phase-specific results:
-
 ```json
 {
-  "phase": "red|green|refactor",
   "success": true,
-  "commit": "abc123",
-  "summary": "Phase summary",
-  // Phase-specific fields...
-}
-```
-
-## Phase-Specific Behavior
-
-### RED Phase
-
-**Goal**: Write failing tests that define expected behavior.
-
-**Process**:
-1. Call `rpi-research` → reads `research.md`, writes `red-research.md`
-2. Call `rpi-plan` → reads `red-research.md`, writes `red-plan.md`
-3. Call `rpi-implement` → writes test files, updates `report.md`
-4. Call `verify-results(phase: 'red')` → gate: all tests must fail correctly
-5. Call `git-commit` → `test(scope): add tests`
-
-**Gate Criteria**:
-- Tests exist (`testsTotal > 0`)
-- Tests fail (`testsFailing > 0`)
-- Failures are assertion failures (not syntax errors)
-
-**Output**:
-```json
-{
-  "phase": "red",
-  "success": true,
-  "testsCreated": 8,
-  "testFiles": ["src/auth/Auth.test.ts"],
-  "commit": "abc123",
-  "summary": "Created 8 tests for user authentication"
-}
-```
-
-### GREEN Phase
-
-**Goal**: Write minimal code to pass all tests, one at a time, **then integrate**.
-
-**Process**:
-1. Call `rpi-research` → reads `research.md` + `report.md`, writes `green-research.md`
-2. Call `rpi-plan` → reads `green-research.md`, writes `green-plan.md` (MUST include integration point)
-3. Call `rpi-implement` → writes implementation + **integrates code**, updates `report.md`
-4. Call `verify-results(phase: 'green')` → gate: 100% pass, zero type errors, **integrated**
-   - If `integrationVerified === false`: FIX integration, then re-verify (loop)
-5. Call `git-commit` → `feat(scope): implement feature`
-
-**Gate Criteria**:
-- `passRate === 100`
-- `testsFailing === 0`
-- `typeErrors.length === 0`
-- `integrationVerified === true` (code is wired into app - **blocking requirement**)
-
-**Integration is implementation, not just verification.** The plan specifies WHERE to integrate, and rpi-implement MUST add the code there. Dead code = incomplete GREEN phase.
-
-**Output**:
-```json
-{
   "phase": "green",
-  "success": true,
-  "testsPassing": 8,
-  "testsTotal": 8,
-  "passRate": 100,
-  "commit": "def456",
-  "summary": "All 8 tests passing, feature integrated"
+  "commitHash": "abc123",
+  "testsPassing": 3,
+  "testsTotal": 3,
+  "summary": "Implemented feature X, integrated into routes"
 }
 ```
 
-### REFACTOR Phase
+## Process
 
-**Goal**: Improve code quality while keeping all tests passing.
+### 1. Load Phase Context
 
-**Process**:
-1. Call `rpi-research` → reads all context, writes `refactor-research.md`
-2. Call `rpi-plan` → reads `refactor-research.md`, writes `refactor-plan.md`
-3. Call `rpi-implement` → applies refactorings one at a time, updates `report.md`
-4. Call `verify-results(phase: 'refactor')` → gate: 100% pass, zero type errors
-5. Call `git-commit` → `refactor(scope): improve quality`
+Load the appropriate context file based on phase:
 
-**Gate Criteria**:
-- `passRate === 100`
-- `testsFailing === 0`
-- `typeErrors.length === 0`
-- `testsTotal >= previousTestsTotal` (no tests removed)
-
-**Output**:
-```json
-{
-  "phase": "refactor",
-  "success": true,
-  "refactorings": ["Extracted helper function", "Added type guard"],
-  "testsPassing": 8,
-  "testsTotal": 8,
-  "commit": "ghi789",
-  "summary": "2 refactorings applied, all tests passing"
-}
-```
-
-## Sub-Agent Calls
-
-| Step | Agent | Input | Output |
-|------|-------|-------|--------|
-| 1 | rpi-research | `{ slug, phase }` | `{phase}-research.md` written |
-| 2 | rpi-plan | `{ slug, phase }` | `{phase}-plan.md` written |
-| 3 | rpi-implement | `{ slug, phase }` | Code written, `report.md` updated |
-| 4 | verify-results | `{ phase }` | `{ canProceed, ... }` |
-| 5 | git-commit | `{ phase, changes }` | `{ commitHash }` |
-
-## Context Loading
-
-Phase-specific context files loaded:
-
-| Phase | Context Files |
-|-------|---------------|
-| RED | `.agents/context/phase-red.md`, `.agents/context/testing.md` |
+| Phase | Context File |
+|-------|--------------|
+| RED | `.agents/context/phase-red.md` |
 | GREEN | `.agents/context/phase-green.md` |
 | REFACTOR | `.agents/context/phase-refactor.md` |
 
-## Artifact Locations
+Also read:
+- `.agents/work/{slug}/definition.md` - Work item
+- `.agents/work/{slug}/research.md` - Research findings
+- Previous phase plans if applicable
 
-All artifacts written to `.agents/work/{slug}/`:
+### 2. Execute Phase
 
-| Phase | Research | Plan | Code Output |
-|-------|----------|------|-------------|
-| RED | `red-research.md` | `red-plan.md` | Test files in codebase |
-| GREEN | `green-research.md` | `green-plan.md` | Source files in codebase |
-| REFACTOR | `refactor-research.md` | `refactor-plan.md` | Refactored source files |
+Follow the loaded context file instructions exactly. Each phase has:
+- **Plan** - Write to `.agents/work/{slug}/{phase}-plan.md`
+- **Execute** - Write code/tests per plan
+- **Verify** - Run tests, check types, verify gates
+- **Commit** - Git commit with conventional message
 
-All phases append to `report.md`.
+---
 
-## Error Handling
+## RED Phase (phase="red")
 
-If any step fails:
-1. Do NOT proceed to next step
-2. Return `success: false` with error details
-3. Do NOT commit incomplete work
+### Goal
+Write failing tests that define expected behavior.
 
-```json
-{
-  "phase": "green",
-  "success": false,
-  "error": "Tests still failing",
-  "details": {
-    "testsPassing": 6,
-    "testsTotal": 8,
-    "failingTests": ["should handle auth timeout", "should validate token"]
-  }
-}
+### Steps
+
+1. **Go and See** - Read existing tests, source files, spec
+2. **Plan** - Identify 1-5 tests, write to `{slug}/red-plan.md`
+3. **Implement Tests** - One behavior per test, Arrange/Act/Assert
+4. **Verify** - Tests must fail with assertion errors (not syntax/import)
+5. **Commit** - `test(scope): add X tests`
+
+### Gate
+- Tests exist (`testsTotal > 0`)
+- Tests fail as expected (`testsFailing > 0`)
+- Failures are assertion failures
+
+---
+
+## GREEN Phase (phase="green")
+
+### Goal
+Implement code to pass all tests, then integrate.
+
+### Steps
+
+1. **Go and See** - Read failing tests, understand expectations
+2. **Plan** - Identify implementation steps + integration point
+3. **Implement** - One test at a time, minimal code
+4. **Integrate** - Wire into application (MANDATORY)
+5. **Verify** - 100% pass, zero type errors, integration verified
+6. **Commit** - `feat(scope): implement X`
+
+### Integration (MANDATORY)
+
+Detect project type and integrate accordingly:
+
+| Type | Integration File | Code to Add |
+|------|------------------|-------------|
+| API | `src/routes/index.ts` | Route registration |
+| Frontend | Router or parent | Component/Route |
+| Game | Scene file | `addChild` or `update` |
+| CLI | Entry point | Command registration |
+| Library | `src/index.ts` | Export statement |
+
+**Dead code = GREEN phase failure.** Feature must be accessible.
+
+### Gate
+- `passRate === 100%`
+- `typeErrors === 0`
+- `integrated === true`
+
+---
+
+## REFACTOR Phase (phase="refactor")
+
+### Goal
+Improve code quality while preserving behavior.
+
+### Steps
+
+1. **Go and See** - Read current implementation
+2. **Plan** - Identify safe refactorings
+3. **Execute** - One change at a time, verify after each
+4. **If tests fail** - UNDO immediately, try different approach
+5. **Commit** - `refactor(scope): improve X`
+
+### Safe Refactorings (prefer)
+- Rename variable/function
+- Extract function
+- Remove unused code
+- Add type annotations
+- Simplify conditionals
+
+### Gate
+- `passRate === 100%`
+- `typeErrors === 0`
+- Test count not decreased
+
+---
+
+## Common Operations
+
+### Running Tests
+```bash
+bun test --reporter=json 2>&1
+```
+
+### Type Checking
+```bash
+tsc --noEmit 2>&1
+```
+
+### Committing
+```bash
+git add -A
+git commit -m "$(cat <<'EOF'
+{type}({scope}): {description}
+
+- {detail 1}
+- {detail 2}
+
+🤖 Generated with Claude Code
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+)"
+```
+
+Commit types:
+- `test` - RED phase
+- `feat` - GREEN phase
+- `refactor` - REFACTOR phase
+
+### Update Report
+
+Append to `.agents/work/{slug}/report.md`:
+
+```markdown
+## {PHASE} Phase Report
+
+**Completed**: {timestamp}
+**Status**: {success|failed}
+
+### Changes
+- {change 1}
+- {change 2}
+
+### Test Results
+- Passing: N/N
 ```
 
 ## Key Rules
 
-1. **Go and See** - Read actual files before editing, research may be stale
-2. **Single-Piece Flow** - One test (GREEN) or one change (REFACTOR) at a time
-3. **Gate Enforcement** - Never commit without verify-results approval
-4. **Eliminate Waste** - Write only what tests demand
-5. **Always Commit** - EVERY phase MUST end with a git commit. No phase is complete without a commit hash returned.
+1. **You are a leaf agent** - Do NOT spawn other agents
+2. **Load context file** - Read phase-*.md for guidance
+3. **Go and See** - Read actual files before editing
+4. **Single-piece flow** - One test/change at a time
+5. **Verify constantly** - Run tests after each change
+6. **Gates are strict** - Don't commit until gates pass
+7. **Integration is mandatory** - GREEN phase wires code into app
+
+## Error Handling
+
+If phase fails:
+
+```json
+{
+  "success": false,
+  "phase": "green",
+  "error": "Tests still failing after implementation",
+  "testsPassing": 2,
+  "testsTotal": 3,
+  "failingTests": ["should validate token expiry"]
+}
+```
+
+If integration fails:
+
+```json
+{
+  "success": false,
+  "phase": "green",
+  "error": "Integration failed",
+  "details": "Feature implemented but not wired into routes"
+}
+```
 
 ## Token Budget
 
-- Input: ~5k tokens (slug, phase, work item context)
-- Peak: ~35k tokens (during implementation)
-- Output: ~1k token summary
-
-Each sub-agent runs with fresh context to stay within limits.
+- Input: ~10k tokens (context + research + plans)
+- Peak: ~40k tokens (during implementation)
+- Output: ~600 tokens (result + report)
