@@ -12,6 +12,13 @@ Full-featured Research-Plan-Implement (RPI) workflow with Test-Driven Developmen
 - **Automated Commits**: Conventional format after each phase
 - **Bidirectional Links**: Full traceability (spec ↔ roadmap ↔ todos ↔ code)
 
+## Requirements
+
+- **Bun** - Required for hooks (phase enforcement, queue processing)
+  ```bash
+  curl -fsSL https://bun.sh/install | bash
+  ```
+
 ## Quick Start
 
 ### 1. Install the Plugin

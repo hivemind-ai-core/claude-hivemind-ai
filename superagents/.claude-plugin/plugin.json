@@ -1,6 +1,6 @@
 {
   "name": "superagents",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Full-featured Research-Plan-Implement (RPI) workflow with Test-Driven Development (TDD)",
   "author": {
     "name": "Hivemind AI",

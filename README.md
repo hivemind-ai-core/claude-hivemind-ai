@@ -11,6 +11,13 @@ Hivemind AI provides modular, composable plugins that enhance Claude Code with s
 - **Hooks**: Runtime enforcement and workflow automation
 - **Commands**: User-facing workflow orchestration
 
+## Requirements
+
+- **Bun** - Required for plugin hooks (phase enforcement, queue processing)
+  ```bash
+  curl -fsSL https://bun.sh/install | bash
+  ```
+
 ## Installation
 
 ```bash

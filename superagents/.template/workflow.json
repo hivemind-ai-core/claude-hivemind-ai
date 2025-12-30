@@ -1,17 +1,4 @@
 {
-  "version": "1.3.0",
-  "projectInitialized": true,
-  "initializedAt": null,
-  "currentPhase": null,
-  "currentWorkItem": null,
-  "workUntil": null,
-  "workItemStartedAt": null,
-  "lastUpdated": null,
-  "completedItems": [],
-  "stats": {
-    "totalWorkItems": 0,
-    "completedWorkItems": 0,
-    "totalTests": 0,
-    "passingTests": 0
-  }
+  "version": "1.4.0",
+  "currentPhase": null
 }
