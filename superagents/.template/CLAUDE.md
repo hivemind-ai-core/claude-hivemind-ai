@@ -1,6 +1,6 @@
 # RPI Workflow
 
-<!-- superagents:1.1.1 -->
+<!-- superagents:1.2.0 -->
 
 Research-Plan-Implement with TDD. Quality built in, not inspected in.
 
@@ -23,7 +23,7 @@ Run tests → All pass? → YES → Integration check? → YES → Commit allowe
                NO → Fix → Run again → Repeat    NO → Wire into app → Repeat
 ```
 
-The `verify-results` agent gates all commits. `canProceed: true` required.
+The `verify-results` agent enforces gates, and `git-commit` handles commits after each phase.
 
 ## Workflow
 

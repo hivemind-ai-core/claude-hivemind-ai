@@ -5,15 +5,15 @@ Write failing tests that define expected behavior.
 ## Artifacts
 
 ### Read Before Starting
-- `.agents/research/{slug}.md` - Research findings
+- `.agents/work/{slug}/research.md` - Research findings
 
 ### Write Before Executing
-- `.agents/plans/{slug}-red.md` - Test plan
+- `.agents/work/{slug}/red-plan.md` - Test plan
 
 ## Gate: Entry
 
 Before starting RED:
-1. Research artifact exists at `.agents/research/{slug}.md`
+1. Research artifact exists at `.agents/work/{slug}/research.md`
 2. Work item is right-sized (1-5 tests)
 
 ## Gate: Exit

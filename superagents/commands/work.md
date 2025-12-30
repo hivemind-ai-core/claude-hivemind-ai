@@ -4,23 +4,20 @@ description: Execute the RPI workflow (Research-Plan-Implement with TDD) for que
 
 # /work Command
 
-Process the work queue by following the workflow in `.agents/context/work.md`.
+Process the work queue autonomously until empty.
 
 ## Instructions
 
-1. Read `.agents/context/work.md` for the complete workflow
-2. Follow the steps exactly as described
-3. Spawn leaf agents via Task tool (subagents cannot spawn subagents)
-4. Loop until queue is empty
-5. Do not ask the user - just execute
+1. Read `.agents/context/work.md` - it contains the full workflow
+2. Follow it exactly
+3. Do not ask the user - just execute
+4. Stop hook will tell you to continue if items remain
 
-## Quick Reference
+## Key Points
 
-The workflow file tells you to:
-- Read `queued.md` for next item
-- For each phase (Research → RED → GREEN → REFACTOR → Architecture → Archive):
-  - Load phase context
-  - Spawn leaf agents: `rpi-research`, `rpi-plan`, `rpi-implement`, `verify-results`, `git-commit`
-- Update queue and loop
+- **Minimal context**: Only track the work slug, everything else in files
+- **Fine-grained agents**: Each agent does one thing, returns minimal summary
+- **Phase context files**: Load phase-red/green/refactor.md for phase guidance
+- **Artifacts via files**: Agents communicate through files, not context
 
 **Start by reading `.agents/context/work.md`.**

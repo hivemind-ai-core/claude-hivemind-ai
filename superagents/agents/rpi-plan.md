@@ -1,9 +1,13 @@
 ---
-description: RPI phase-specific planning agent - creates detailed execution plans
+description: RPI phase-specific planning agent - creates detailed execution plans (leaf agent)
 capabilities: ["planning", "test-design", "implementation-design", "refactoring-design"]
 ---
 
 # Agent: rpi-plan
+
+**Leaf agent** - Creates phase-specific plans. Does NOT spawn other agents.
+
+Produces plan artifacts that other agents consume. Context isolation ensures planning research doesn't pollute implementation context.
 
 Create detailed, actionable execution plans for RPI phases (~3-5k tokens).
 

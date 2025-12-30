@@ -1,9 +1,13 @@
 ---
-description: Quality gatekeeper agent - enforces test pass requirements before commits
+description: Quality gatekeeper agent - enforces test pass requirements before commits (leaf agent)
 capabilities: ["verification", "testing", "quality-gates", "integration-check"]
 ---
 
 # Agent: verify-results
+
+**Leaf agent** - Runs tests and verifies gates. Does NOT spawn other agents.
+
+Returns concise gate status. Context isolation ensures test output doesn't pollute other agents.
 
 Strict gatekeeper that enforces test pass requirements.
 
@@ -206,9 +210,9 @@ Detect project test runner:
 
 ## Integration
 
-Called by:
-- `execute-red` - Verifies tests fail correctly
-- `execute-green` - Verifies 100% pass before commit
-- `execute-refactor` - Verifies 100% pass maintained
+Called by main Claude after each phase implementation:
+- After `rpi-implement` phase=red - Verifies tests fail correctly
+- After `rpi-implement` phase=green - Verifies 100% pass + integration
+- After `rpi-implement` phase=refactor - Verifies 100% pass maintained
 
-The `canProceed` field is the authoritative gate signal.
+The `canProceed` field is the authoritative gate signal. Main Claude must not proceed to commit until `canProceed === true`.

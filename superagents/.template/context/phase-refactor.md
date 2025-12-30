@@ -5,12 +5,12 @@ Improve code quality while preserving behavior. One change at a time.
 ## Artifacts
 
 ### Read Before Starting
-- `.agents/research/{slug}.md` - Research findings
-- `.agents/plans/{slug}-red.md` - Test plan
-- `.agents/plans/{slug}-green.md` - Implementation plan
+- `.agents/work/{slug}/research.md` - Research findings
+- `.agents/work/{slug}/red-plan.md` - Test plan
+- `.agents/work/{slug}/green-plan.md` - Implementation plan
 
 ### Write Before Executing
-- `.agents/plans/{slug}-refactor.md` - Refactoring plan
+- `.agents/work/{slug}/refactor-plan.md` - Refactoring plan
 
 ## Gate: Entry
 

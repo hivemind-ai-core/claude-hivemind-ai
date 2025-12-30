@@ -418,10 +418,10 @@ const stop = async (payload: StopPayload): Promise<StopResponse> => {
 
   if (currentWorkItem) {
     reason = `Work item "${currentWorkItem}" in progress (phase: ${currentPhase || 'research'}). `
-    reason += `Follow .agents/context/work.md to continue. Spawn fat phase agents: Task(superagents:rpi, phase=red|green|refactor). Do not ask the user.`
+    reason += `Read .agents/context/work.md and continue from current phase. Do not ask the user.`
   } else if (queueStatus.hasPending) {
     reason = `${queueStatus.count} item${queueStatus.count > 1 ? 's' : ''} queued. Next: "${queueStatus.items[0]}". `
-    reason += `Follow .agents/context/work.md workflow. Spawn: work-research, then rpi(phase=red), rpi(phase=green), rpi(phase=refactor), architecture, archive-work. Do not ask the user.`
+    reason += `Read .agents/context/work.md and follow the workflow. Do not ask the user.`
   }
 
   return {

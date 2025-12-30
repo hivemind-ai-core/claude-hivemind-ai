@@ -5,11 +5,11 @@ Implement code to pass all tests. One test at a time.
 ## Artifacts
 
 ### Read Before Starting
-- `.agents/research/{slug}.md` - Research findings
-- `.agents/plans/{slug}-red.md` - Test plan (what tests expect)
+- `.agents/work/{slug}/research.md` - Research findings
+- `.agents/work/{slug}/red-plan.md` - Test plan (what tests expect)
 
 ### Write Before Executing
-- `.agents/plans/{slug}-green.md` - Implementation plan
+- `.agents/work/{slug}/green-plan.md` - Implementation plan
 
 ## Gate: Entry
 

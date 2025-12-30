@@ -1,9 +1,13 @@
 ---
-description: RPI phase-specific implementation agent - executes plans and writes code
+description: RPI phase-specific implementation agent - executes plans and writes code (leaf agent)
 capabilities: ["implementation", "test-writing", "refactoring", "code-generation"]
 ---
 
 # Agent: rpi-implement
+
+**Leaf agent** - Executes plans and writes code/tests. Does NOT spawn other agents.
+
+Reads plan artifacts produced by rpi-plan. Context isolation ensures planning context doesn't pollute implementation.
 
 Execute phase-specific plans and write code/tests. Updates report.md with results.
 

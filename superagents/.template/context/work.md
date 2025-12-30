@@ -1,172 +1,176 @@
-# Work Orchestration Context
+# Work Orchestration
 
-This file is loaded when running `/work`. Follow it exactly.
+Read this file when running `/work`. Follow it exactly. Do not ask the user.
 
-## Architecture
+## Minimal Context Rule
 
-**Subagents CANNOT spawn other subagents.** You (main Claude) orchestrate directly.
+**Only accumulate the work item slug.** Everything else goes in files or is isolated in agents.
 
-Each phase runs in an isolated subagent to prevent context pollution.
+Agents communicate via files:
+- Agent reads input files
+- Agent does work (may read many files internally - this stays isolated)
+- Agent writes output files
+- Agent returns minimal summary
+- You (main Claude) just track the slug and orchestrate
 
-```
-Main Claude (you)
-  ├── work-research        (gathers context for work item)
-  ├── rpi phase=red        (writes tests, verifies they fail, commits)
-  ├── rpi phase=green      (implements, integrates, verifies, commits)
-  ├── rpi phase=refactor   (refactors, verifies, commits)
-  ├── architecture         (updates docs)
-  └── archive-work         (archives and commits)
-```
+## Workflow
 
-## Workflow Per Work Item
-
-For each item in `queued.md`:
-
-### 1. Setup
+### 1. Get Next Work Item
 
 ```
 Read: .agents/work/queued.md
-Action: Move first item from "## Up Next" to "## In Progress"
+Find: First item in "## Up Next"
+Action: Move it to "## In Progress"
 Write: Updated queued.md
-Extract: {slug} from moved item
+Extract: {slug}
 ```
 
 ### 2. Research Phase
 
 ```
-Task(superagents:work-research):
-  "Research work item {slug}.
-   Read: .agents/work/{slug}/definition.md
-   Write: .agents/work/{slug}/research.md
-   Return: summary and estimated test count"
+Task(superagents:work-research, "{slug}")
+  Reads: .agents/work/{slug}/definition.md, spec/, architecture/
+  Writes: .agents/work/{slug}/research.md
+  Returns: { testCount, summary }
 ```
 
-If test count > 5: Flag item as too large, need to split.
+If testCount > 5: Work item too large, needs splitting. STOP.
 
 ### 3. RED Phase
 
-```
-Task(superagents:rpi):
-  "Execute RED phase for {slug}.
-   Phase: red
-   Read: .agents/context/phase-red.md for guidance
-   Do: Plan tests, write tests, verify they fail, commit
-   Expected: Tests exist and fail with assertion errors"
-```
+Spawn these agents in sequence (they load phase context internally):
 
-If `success: false`: STOP, report error.
+```
+Task(superagents:rpi-research, "{slug} phase=red")
+  Reads: research.md, the code
+  Writes: red-research.md
+
+Task(superagents:rpi-plan, "{slug} phase=red")
+  Reads: red-research.md
+  Writes: red-plan.md
+
+Task(superagents:rpi-implement, "{slug} phase=red")
+  Reads: red-plan.md
+  Writes: test files, report.md
+  Returns: { testsCreated, filesAffected }
+
+Task(superagents:verify-results, "phase=red")
+  Returns: { canProceed, testsFailing }
+  Gate: testsFailing > 0, failures are assertions
+
+If canProceed === false: STOP, report error.
+
+Task(superagents:git-commit, "phase=red workItem={slug}")
+  Returns: { commitHash }
+```
 
 ### 4. GREEN Phase
 
-```
-Task(superagents:rpi):
-  "Execute GREEN phase for {slug}.
-   Phase: green
-   Read: .agents/context/phase-green.md for guidance
-   Do: Plan implementation, implement one test at a time, INTEGRATE into app, verify 100% pass, commit
-   Expected: 100% pass rate, zero type errors, integration verified"
-```
+Spawn these agents in sequence (they load phase context internally):
 
-If `success: false`: STOP, report error.
+```
+Task(superagents:rpi-research, "{slug} phase=green")
+  Reads: research.md, the code, report.md
+  Writes: green-research.md
+
+Task(superagents:rpi-plan, "{slug} phase=green")
+  Reads: green-research.md
+  Writes: green-plan.md
+  MUST include integration point
+
+Task(superagents:rpi-implement, "{slug} phase=green")
+  Reads: green-plan.md
+  Writes: source files, report.md
+  MUST integrate code into application
+  Returns: { filesAffected, integrated }
+
+Task(superagents:verify-results, "phase=green")
+  Returns: { canProceed, passRate, integrationVerified }
+  Gate: passRate === 100, integrationVerified === true
+
+If canProceed === false:
+  - Integration issue? Fix and re-verify
+  - Test failure? STOP, report error
+
+Task(superagents:git-commit, "phase=green workItem={slug}")
+  Returns: { commitHash }
+```
 
 ### 5. REFACTOR Phase
 
-```
-Task(superagents:rpi):
-  "Execute REFACTOR phase for {slug}.
-   Phase: refactor
-   Read: .agents/context/phase-refactor.md for guidance
-   Do: Plan refactorings, apply one at a time, verify after each, commit
-   Expected: 100% pass rate maintained"
-```
+Spawn these agents in sequence (they load phase context internally):
 
-If `success: false`: STOP, report error.
+```
+Task(superagents:rpi-research, "{slug} phase=refactor")
+  Reads: research.md, the code, report.md
+  Writes: refactor-research.md
+
+Task(superagents:rpi-plan, "{slug} phase=refactor")
+  Reads: refactor-research.md
+  Writes: refactor-plan.md
+
+Task(superagents:rpi-implement, "{slug} phase=refactor")
+  Reads: refactor-plan.md
+  Writes: source files, report.md
+  One change at a time, verify after each
+  Returns: { refactoringsApplied, filesAffected }
+
+Task(superagents:verify-results, "phase=refactor")
+  Returns: { canProceed, passRate }
+  Gate: passRate === 100
+
+If canProceed === false: STOP, report error.
+
+Task(superagents:git-commit, "phase=refactor workItem={slug}")
+  Returns: { commitHash }
+```
 
 ### 6. Architecture Phase
 
 ```
-Task(superagents:architecture):
-  "Update architecture docs for completed work item {slug}.
-   Generate Mermaid diagrams if helpful."
+Task(superagents:architecture, "{slug}")
+  Reads: definition.md, report.md
+  Writes: architecture documentation files
+  Returns: { docsUpdated, diagramsGenerated }
+
+Task(superagents:git-commit, "phase=docs workItem={slug}")
+  Returns: { commitHash }
 ```
 
 ### 7. Archive Phase
 
 ```
-Task(superagents:archive-work):
-  "Archive work item {slug}.
-   Move: .agents/work/{slug}/ to .agents/archive/{slug}/
-   Update: .agents/archive/index.md
-   Update: .agents/work/completed.md"
+Task(superagents:archive-work, "{slug}")
+  Moves: .agents/work/{slug}/ → .agents/archive/{slug}/
+  Updates: .agents/archive/index.md, .agents/work/completed.md
+  Returns: { archivedTo }
 
 Action: Remove {slug} from queued.md "## In Progress"
-Action: git commit -m "chore({slug}): archive completed work"
+
+Task(superagents:git-commit, "phase=chore workItem={slug}")
+  Returns: { commitHash }
 ```
 
-### 8. Loop
+### 8. Check for More Work
 
 ```
-Check: .agents/work/queued.md "## Up Next"
-If items remain: Go to Step 1 with next item
+Read: .agents/work/queued.md "## Up Next"
+If items remain: Go to Step 1
 If empty: Report "Queue empty. All work complete."
 ```
 
-## Task Tool Usage
-
-When spawning agents:
-
-```javascript
-Task({
-  subagent_type: "superagents:rpi",
-  prompt: "Execute GREEN phase for {slug}. Phase: green. Read .agents/context/phase-green.md for guidance. Implement and integrate code.",
-  description: "GREEN phase for {slug}"
-})
-```
-
-Include:
-- Work item slug
-- Phase parameter (for rpi agent)
-- Path to context file
-- Expected outcome
-
 ## Error Handling
 
-If any phase agent returns `success: false`:
+If any agent fails or gate doesn't pass:
+1. Keep item in "## In Progress"
+2. STOP (do not continue)
+3. Report error
+4. User fixes and re-runs /work
 
-1. Log the error details
-2. Keep item in "## In Progress"
-3. STOP the workflow (do NOT continue to next item)
-4. Report error to user
-5. User must fix issue and re-run `/work`
+## What You Track
 
-## Context Isolation
+Only track:
+- `{slug}` - current work item slug
+- Agent return values (minimal summaries)
 
-Each phase runs in a separate subagent. This means:
-- Phase agents only receive their specific context
-- Intermediary work (plan files, code changes) stay in the subagent
-- Only results (success/failure, summary) return to main Claude
-- Main Claude's context stays lean
-
-## Phase Agent Responsibilities
-
-Each rpi phase agent internally:
-1. Loads phase context file (phase-red.md, phase-green.md, phase-refactor.md)
-2. Creates phase plan (writes to .agents/work/{slug}/{phase}-plan.md)
-3. Executes plan (writes code/tests)
-4. Verifies gates (runs tests, checks types)
-5. Commits with conventional message
-6. Returns result summary
-
-The agent reads the phase context file to know:
-- What gates must pass
-- What to do (tests vs implementation vs refactoring)
-- How to commit
-
-## Gate Summary
-
-| Phase | Agent Returns Success When |
-|-------|---------------------------|
-| Research | research.md written, test count <= 5 |
-| RED | Tests exist, tests fail with assertions, committed |
-| GREEN | 100% pass, zero type errors, integrated, committed |
-| REFACTOR | 100% pass, zero type errors, committed |
+Everything else is in files. Don't accumulate agent internals.

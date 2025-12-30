@@ -1,9 +1,13 @@
 ---
-description: RPI phase-specific research agent - gathers context for RED, GREEN, or REFACTOR phase
+description: RPI phase-specific research agent - gathers context for RED, GREEN, or REFACTOR phase (leaf agent)
 capabilities: ["research", "context-gathering", "code-analysis"]
 ---
 
 # Agent: rpi-research
+
+**Leaf agent** - Gathers phase-specific context. Does NOT spawn other agents.
+
+Produces research artifacts that rpi-plan consumes. Context isolation ensures research doesn't pollute planning/implementation.
 
 Phase-specific research for RPI workflow. Analyzes context and prepares phase-specific research document.
 

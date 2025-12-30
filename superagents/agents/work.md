@@ -13,12 +13,17 @@ This agent was designed to orchestrate the work queue by spawning phase agents.
 
 ## What To Do Instead
 
-Use the `/work` command, which tells the main Claude instance to:
+Use the `/work` command, which tells main Claude to:
 1. Read `.agents/context/work.md` for workflow
-2. Spawn leaf agents directly (rpi-plan, rpi-implement, verify-results, etc.)
+2. Spawn fat agents directly:
+   - `work-research` - gathers context for work item
+   - `rpi` (phase=red|green|refactor) - handles entire phase
+   - `architecture` - updates docs
+   - `archive-work` - archives completed work
 3. Loop until queue is empty
 
 ## See Also
 
 - `/work` command
 - `.agents/context/work.md` - Full workflow instructions
+- `rpi` agent - Fat phase agent
