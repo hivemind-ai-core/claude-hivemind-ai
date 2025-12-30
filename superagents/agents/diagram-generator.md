@@ -1,9 +1,11 @@
 ---
-name: diagram-generator
-description: Analyze code or specifications and generate appropriate Mermaid diagrams
+description: Analyze code or specifications and generate appropriate Mermaid diagrams (leaf agent)
+capabilities: ["diagram-generation", "code-analysis", "mermaid"]
 ---
 
-# Diagram Generator Agent
+# Agent: diagram-generator
+
+**Leaf agent** - Generates Mermaid diagrams. Does NOT spawn other agents.
 
 Generate Mermaid diagrams that visualize code structure, data flows, and system interactions.
 

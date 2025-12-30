@@ -1,9 +1,11 @@
 ---
-name: diagram-to-image
-description: Convert Mermaid .mmd files to SVG/PNG images using npx @mermaid-js/mermaid-cli
+description: Convert Mermaid .mmd files to SVG/PNG images using mermaid-cli (leaf agent)
+capabilities: ["diagram-conversion", "image-generation", "mermaid-cli"]
 ---
 
-# Diagram to Image Agent
+# Agent: diagram-to-image
+
+**Leaf agent** - Converts .mmd to images. Does NOT spawn other agents.
 
 Convert Mermaid diagram files (.mmd) to images (SVG/PNG) for embedding in documentation.
 

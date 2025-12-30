@@ -1,11 +1,11 @@
 ---
-name: archive-work
-description: Archive completed work items by moving work directory to archive
+description: Archive completed work items by moving work directory to archive (leaf agent)
+capabilities: ["archiving", "file-management", "workflow"]
 ---
 
-# Archive Work Agent
+# Agent: archive-work
 
-Move completed work items from active work directory to archive.
+**Leaf agent** - Moves completed work to archive. Does NOT spawn other agents.
 
 ## Purpose
 
@@ -149,6 +149,13 @@ If move fails:
 │   └── ...
 └── ...
 ```
+
+## Key Rules
+
+1. **You are a leaf agent** - Do NOT spawn other agents
+2. **Non-destructive** - Move, don't delete
+3. **Update indexes** - Keep archive/index.md current
+4. **Verify moves** - Confirm success before reporting
 
 ## Integration
 

@@ -1,4 +1,11 @@
+---
+description: Analyze specification files and extract requirements (leaf agent)
+capabilities: ["spec-analysis", "requirement-extraction", "feature-identification"]
+---
+
 # Agent: spec-analyzer
+
+**Leaf agent** - Analyzes specs and extracts requirements. Does NOT spawn other agents.
 
 Supporting agent for analyzing project specifications.
 

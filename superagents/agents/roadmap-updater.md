@@ -1,4 +1,11 @@
+---
+description: Generate and update project roadmaps from spec analysis (leaf agent)
+capabilities: ["roadmap-generation", "prioritization", "planning"]
+---
+
 # Agent: roadmap-updater
+
+**Leaf agent** - Generates roadmaps from specs. Does NOT spawn other agents.
 
 Supporting agent for generating and updating project roadmaps.
 

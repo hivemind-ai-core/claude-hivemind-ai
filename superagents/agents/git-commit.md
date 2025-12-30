@@ -1,6 +1,11 @@
+---
+description: Internal agent for creating conventional git commits (leaf agent)
+capabilities: ["git", "commit", "version-control"]
+---
+
 # Agent: git-commit
 
-Internal agent for creating conventional git commits.
+**Leaf agent** - Creates git commits. Does NOT spawn other agents.
 
 ## Purpose
 
@@ -30,7 +35,7 @@ Returns object with:
 
 🤖 Generated with Claude Code
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ## Types
@@ -54,7 +59,7 @@ test(auth): add authentication tests
 
 🤖 Generated with Claude Code
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ### GREEN Phase
@@ -67,7 +72,7 @@ feat(auth): implement authentication system
 
 🤖 Generated with Claude Code
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ### ARCHIVE Phase (chore)
@@ -80,7 +85,7 @@ chore(auth): archive completed work
 
 🤖 Generated with Claude Code
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ## Process
@@ -97,3 +102,9 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 3. **Return Results**
    - Capture commit hash
    - List committed files
+
+## Key Rules
+
+1. **You are a leaf agent** - Do NOT spawn other agents
+2. **Conventional commits** - Follow commit message format
+3. **Include attribution** - Always add Claude co-author
