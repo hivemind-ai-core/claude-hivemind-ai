@@ -36,8 +36,19 @@ function readWorkflowState(cwd: string): WorkflowState | null {
   }
 }
 
-// Helper to check if queued.md has items
-function getNextQueuedItem(cwd: string): string | null {
+// Helper to extract items from a specific section of queued.md
+function getItemsInSection(content: string, sectionName: string): string | null {
+  const sectionRegex = new RegExp(`## ${sectionName}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`)
+  const match = content.match(sectionRegex)
+  if (!match) return null
+
+  const sectionContent = match[1]
+  const itemMatch = sectionContent.match(/^- \*\*([^*]+)\*\*/m)
+  return itemMatch ? itemMatch[1].trim() : null
+}
+
+// Helper to check if queued.md has pending or in-progress items
+function getNextQueuedItem(cwd: string): { slug: string; status: 'in_progress' | 'pending' } | null {
   try {
     const queuedPath = path.join(cwd, '.agents', 'work', 'queued.md')
     if (!fs.existsSync(queuedPath)) {
@@ -45,9 +56,19 @@ function getNextQueuedItem(cwd: string): string | null {
     }
     const content = fs.readFileSync(queuedPath, 'utf-8')
 
-    // Look for items in format: - **slug** -- description
-    const match = content.match(/^- \*\*([^*]+)\*\*/m)
-    return match ? match[1].trim() : null
+    // First check "In Progress" - if something is there, it needs to be finished
+    const inProgress = getItemsInSection(content, 'In Progress')
+    if (inProgress) {
+      return { slug: inProgress, status: 'in_progress' }
+    }
+
+    // Then check "Up Next" for pending items
+    const upNext = getItemsInSection(content, 'Up Next')
+    if (upNext) {
+      return { slug: upNext, status: 'pending' }
+    }
+
+    return null
   } catch (error) {
     log('Error reading queued.md:', error)
     return null
@@ -112,7 +133,7 @@ const preToolUse = async (payload: PreToolUsePayload): Promise<PreToolUseRespons
   return {}
 }
 
-// Stop handler - check if work queue has pending items
+// Stop handler - check if work queue has pending or in-progress items
 const stop = async (payload: StopPayload): Promise<StopResponse> => {
   const { transcript_path } = payload
 
@@ -121,36 +142,31 @@ const stop = async (payload: StopPayload): Promise<StopResponse> => {
     ? path.dirname(path.dirname(transcript_path))
     : process.cwd()
 
-  const nextItem = getNextQueuedItem(cwd)
+  const queueItem = getNextQueuedItem(cwd)
 
-  if (!nextItem) {
+  if (!queueItem) {
     return {} // Queue empty, allow stop
   }
 
+  if (queueItem.status === 'in_progress') {
+    return {
+      decision: 'block',
+      reason: `Work item "${queueItem.slug}" is still in progress. Continue the workflow phases (RED → GREEN → REFACTOR → archive). Read .agents/context/work.md if needed.`,
+    }
+  }
+
   return {
     decision: 'block',
-    reason: `Queue has items. Next: "${nextItem}". Read .agents/context/work.md and continue. Do not ask the user.`,
+    reason: `Queue has pending items. Next: "${queueItem.slug}". Read .agents/context/work.md and continue. Do not ask the user.`,
   }
 }
 
-// SubagentStop handler - same logic as Stop
-const subagentStop = async (payload: SubagentStopPayload): Promise<SubagentStopResponse> => {
-  const { transcript_path } = payload
-
-  const cwd = transcript_path
-    ? path.dirname(path.dirname(transcript_path))
-    : process.cwd()
-
-  const nextItem = getNextQueuedItem(cwd)
-
-  if (!nextItem) {
-    return {}
-  }
-
-  return {
-    decision: 'block',
-    reason: `Queue has items. Next: "${nextItem}". Continue workflow. Do not ask the user.`,
-  }
+// SubagentStop handler - subagents should always be allowed to stop
+// (orchestration happens in main Claude, not subagents)
+const subagentStop = async (_payload: SubagentStopPayload): Promise<SubagentStopResponse> => {
+  // Subagents complete their specific task and return.
+  // Main Claude orchestrates continuation based on Stop hook.
+  return {}
 }
 
 // Run the hook
