@@ -102,7 +102,62 @@ index.md files:
 Context files (phase-*.md):
   - Must have # header
   - Must have ## sections
+
+CLAUDE.md git config:
+  - Must contain <!-- superagents:git-config --> section
+  - Must have Mode: (direct|feature-squash|feature-pr)
+  - If missing: triggers repair, prompts user for git config
 ```
+
+### 2.5 Git Workflow Configuration
+
+**When to ask:** Fresh Install, OR Repair when git config is missing, OR `--reconfigure-git` flag.
+
+Ask the user to configure their git workflow. Use the `AskUserQuestion` tool.
+
+#### Question 1: Git Workflow Mode
+
+> How should git work for each work item?
+
+| Option | Description |
+|--------|-------------|
+| **Direct commits** (default) | Commits go to current branch immediately |
+| **Feature branch → squash merge** | Create branch, squash merge when done, delete branch |
+| **Feature branch → PR** | Create branch, open PR when done |
+
+#### Question 2: Branch Prefix (if mode is feature-*)
+
+> What prefix for feature branches?
+
+Default: `feature` (creates branches like `feature/auth-system`)
+
+User can enter custom prefix like `work`, `feat`, `wip`, etc.
+
+#### Question 3: PR Target (if mode is feature-pr)
+
+> Where should PRs be opened against?
+
+| Option | Description |
+|--------|-------------|
+| **Starting branch** (default) | PR targets whatever branch was active when work started |
+| **Specific branch** | Always PR to a specific branch (prompts for branch name, e.g., `main`, `dev`) |
+
+#### Storing the Config
+
+Write the git config to the `<!-- superagents:git-config -->` section in CLAUDE.md:
+
+```markdown
+<!-- superagents:git-config -->
+- **Mode:** feature-pr
+- **Branch prefix:** feature
+- **PR target:** main
+<!-- /superagents:git-config -->
+```
+
+Values:
+- **Mode:** `direct` | `feature-squash` | `feature-pr`
+- **Branch prefix:** any valid git branch name segment (default: `feature`)
+- **PR target:** `starting-branch` | `<branch-name>` (only for feature-pr mode)
 
 ### 3. Fresh Install
 
@@ -117,6 +172,9 @@ When `.agents/` doesn't exist:
 3. **Create architecture/README.md and spec/README.md**
 4. **Update or create CLAUDE.md** with RPI workflow rules
 5. **Create .gitkeep files** in diagram directories
+6. **Configure git workflow** (see section 2.5):
+   - Ask user for git mode, branch prefix, PR target
+   - Write config to CLAUDE.md git-config section
 
 ### 4. Upgrade
 
@@ -131,6 +189,7 @@ When `.agents/` exists and installed version < plugin version:
    - `.agents/archive/*`
    - `.agents/todos/todo.md` content
    - `.agents/ROADMAP.md` content
+   - CLAUDE.md git-config section (preserve user's git workflow choice)
 
 2. **Add missing directories** from Required Directories list
 
@@ -239,13 +298,19 @@ Creating directory structure...
 ✓ Created spec/ (2 directories)
 
 Creating files...
-✓ Created context files (6 files)
+✓ Created context files (7 files)
 ✓ Created index files (12 files)
 ✓ Created workflow.json (v1.1.1)
 ✓ Created ROADMAP.md template
 ✓ Created todo.md template
 ✓ Created done.md
 ✓ Updated CLAUDE.md with RPI rules
+
+Configuring git workflow...
+[Prompts user with AskUserQuestion tool]
+✓ Git mode: feature-pr
+✓ Branch prefix: feature
+✓ PR target: main
 
 Setup complete!
 
@@ -280,6 +345,7 @@ Preserved (not modified):
 - 2 patterns
 - 1 mistake
 - todo.md content
+- Git workflow config (feature-pr → main)
 
 Upgrade complete! Now at v1.1.1
 ```
@@ -327,6 +393,7 @@ Current state:
 - Work item: auth-system (phase: green)
 - Completed: 3 items
 - Pending: 5 items
+- Git workflow: feature-pr → main
 ```
 
 ## Template Reference
@@ -368,3 +435,4 @@ The command supports these optional behaviors (implement as needed):
 | `--force` | Overwrite context files even if customized |
 | `--dry-run` | Show what would change without modifying |
 | `--validate-only` | Run validation, report results, no changes |
+| `--reconfigure-git` | Re-prompt for git workflow settings (even on upgrade/current) |

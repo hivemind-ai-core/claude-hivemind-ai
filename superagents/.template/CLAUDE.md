@@ -145,6 +145,24 @@ When a work item completes:
 
 To view history: read `.agents/archive/index.md`
 
+## Git Workflow
+
+<!-- superagents:git-config -->
+- **Mode:** direct
+- **Branch prefix:** feature
+- **PR target:** (not applicable)
+<!-- /superagents:git-config -->
+
+### Mode Reference
+
+| Mode | Behavior |
+|------|----------|
+| `direct` | Commits go to current branch immediately |
+| `feature-squash` | Create `<prefix>/<slug>` branch, squash merge when done, delete branch |
+| `feature-pr` | Create `<prefix>/<slug>` branch, open PR when done |
+
+The `git-commit` agent reads this config and acts accordingly. The `archive-work` agent handles end-of-work-item actions (squash merge or PR).
+
 ## Commands
 
 - `/work` - Execute RPI workflow (continues until queue empty)
