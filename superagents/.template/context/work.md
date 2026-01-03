@@ -2,6 +2,19 @@
 
 Read this file when running `/work`. Follow it exactly. Do not ask the user.
 
+## Critical: Execute All Steps Sequentially
+
+**DO NOT STOP between phases.** Execute steps 1→2→3→4→5→6→7→8 in one continuous flow.
+
+Each work item requires ALL phases to complete:
+```
+Get Item → Research → RED → GREEN → REFACTOR → Architecture → Archive → Check for More
+```
+
+Only stop when:
+- An error occurs (gate fails, agent errors)
+- Queue is empty (step 8 finds no more items)
+
 ## Minimal Context Rule
 
 **Only accumulate the work item slug.** Everything else goes in files or is isolated in agents.
@@ -36,6 +49,8 @@ Task(superagents:work-research, "{slug}")
 
 If testCount > 5: Work item too large, needs splitting. STOP.
 
+**→ Immediately proceed to RED phase. Do not stop.**
+
 ### 3. RED Phase
 
 Spawn these agents in sequence (they load phase context internally):
@@ -63,6 +78,8 @@ If canProceed === false: STOP, report error.
 Task(superagents:git-commit, "phase=red workItem={slug}")
   Returns: { commitHash }
 ```
+
+**→ Immediately proceed to GREEN phase. Do not stop.**
 
 ### 4. GREEN Phase
 
@@ -96,6 +113,8 @@ Task(superagents:git-commit, "phase=green workItem={slug}")
   Returns: { commitHash }
 ```
 
+**→ Immediately proceed to REFACTOR phase. Do not stop.**
+
 ### 5. REFACTOR Phase
 
 Spawn these agents in sequence (they load phase context internally):
@@ -125,6 +144,8 @@ Task(superagents:git-commit, "phase=refactor workItem={slug}")
   Returns: { commitHash }
 ```
 
+**→ Immediately proceed to Architecture phase. Do not stop.**
+
 ### 6. Architecture Phase
 
 ```
@@ -136,6 +157,8 @@ Task(superagents:architecture, "{slug}")
 Task(superagents:git-commit, "phase=docs workItem={slug}")
   Returns: { commitHash }
 ```
+
+**→ Immediately proceed to Archive phase. Do not stop.**
 
 ### 7. Archive Phase
 
@@ -150,6 +173,8 @@ Action: Remove {slug} from queued.md "## In Progress"
 Task(superagents:git-commit, "phase=chore workItem={slug}")
   Returns: { commitHash }
 ```
+
+**→ Immediately check for more work. Do not stop.**
 
 ### 8. Check for More Work
 
