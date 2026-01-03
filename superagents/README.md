@@ -31,8 +31,10 @@ Full-featured Research-Plan-Implement (RPI) workflow with Test-Driven Developmen
 /plugin install superagents@hivemind-ai
 
 # Restart Claude Code, then run setup
-/setup
+/superagents:setup
 ```
+
+**Tip:** Type `/setup` and press Tab to autocomplete to `/superagents:setup` - works for all commands!
 
 ### 2. Create Your Spec
 
@@ -44,7 +46,7 @@ Add markdown files to `spec/` describing your requirements:
 ### 3. Generate Roadmap
 
 ```bash
-/update-roadmap
+/superagents:update-roadmap
 ```
 
 This analyzes your spec and creates:
@@ -54,7 +56,7 @@ This analyzes your spec and creates:
 ### 4. Start Working
 
 ```bash
-/work
+/superagents:work
 ```
 
 Executes the RPI cycle for the next todo:
@@ -68,15 +70,15 @@ Executes the RPI cycle for the next todo:
 
 | Command | Description |
 |---------|-------------|
-| `/setup` | Initialize .agents directory and update CLAUDE.md |
-| `/work` | Execute RPI workflow for next todo |
-| `/backlog` | Add work items interactively |
-| `/queue-add` | Move items from backlog to queue |
-| `/queue-status` | Show current queue state |
-| `/update-roadmap` | Regenerate roadmap from spec |
-| `/fix-tests` | Systematic test repair |
-| `/project-status` | Show current state and progress |
-| `/janitor` | Clean up stale files and orphaned work items |
+| `/superagents:setup` | Initialize .agents directory and update CLAUDE.md |
+| `/superagents:work` | Execute RPI workflow for next todo |
+| `/superagents:backlog` | Add work items interactively |
+| `/superagents:queue-add` | Move items from backlog to queue |
+| `/superagents:queue-status` | Show current queue state |
+| `/superagents:update-roadmap` | Regenerate roadmap from spec |
+| `/superagents:fix-tests` | Systematic test repair |
+| `/superagents:project-status` | Show current state and progress |
+| `/superagents:janitor` | Clean up stale files and orphaned work items |
 
 ## Agents
 
@@ -225,7 +227,7 @@ Agents communicate via files in `.agents/`:
 
 ## Configuration
 
-After running `/setup-superagents`, your CLAUDE.md will be updated with the RPI workflow rules. You can customize:
+After running `/superagents:setup`, your CLAUDE.md will be updated with the RPI workflow rules. You can customize:
 
 - `.agents/context/*.md` - Phase guidance
 - `.agents/patterns/` - Add successful patterns
