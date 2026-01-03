@@ -44,10 +44,12 @@ Full-featured Research-Plan-Implement (RPI) workflow with Test-Driven Developmen
 **Quick Start:**
 ```bash
 # After installing superagents
-/setup-superagents
-/update-roadmap
-/work
+/superagents:setup
+/superagents:update-roadmap
+/superagents:work
 ```
+
+**Tip:** Type `/work` and press Tab to autocomplete to `/superagents:work` - works for all commands!
 
 [View superagents documentation](./superagents/README.md)
 
