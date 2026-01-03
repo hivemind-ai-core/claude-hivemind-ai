@@ -10,3 +10,4 @@ phase-green.md -- GREEN phase implementation, pass tests -- implementation, tdd,
 phase-refactor.md -- REFACTOR phase, improve code quality -- refactor, quality, cleanup
 testing.md -- Testing conventions and patterns -- testing, conventions, patterns
 artifacts.md -- Artifact creation guidelines -- artifacts, research, plans, files
+work.md -- Work orchestration workflow for /work command -- work, orchestration, workflow

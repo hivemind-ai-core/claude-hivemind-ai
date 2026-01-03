@@ -12,8 +12,10 @@ Initialize or upgrade the superagents RPI workflow for this project.
 |------|---------|----------|
 | **Fresh Install** | No `.agents/` directory | Create full structure from templates |
 | **Upgrade** | `.agents/` exists, version < plugin version | Add missing files, update context files |
-| **Repair** | `.agents/` exists, validation fails | Fix invalid files, restore missing required files |
-| **Already Current** | `.agents/` exists, version = plugin version, valid | Report status, no changes |
+| **Repair** | `.agents/` exists, validation fails (including missing template files) | Fix invalid files, restore missing required files |
+| **Already Current** | `.agents/` exists, version = plugin version, ALL template files present | Report status, no changes |
+
+**Note:** Validation includes comparing project files against actual template contents. If any template file is missing from the project, validation fails and Repair mode is triggered—even if versions match.
 
 ## Process
 
@@ -52,22 +54,39 @@ Legacy directories (for migration):
 ```
 
 #### Required Files (must exist and be valid)
+
+**IMPORTANT: Validate dynamically against actual template contents, not a hardcoded list.**
+
+For each file in `.template/`:
+1. Determine the corresponding destination path (see Template Reference section)
+2. Check if the destination file exists in the project
+3. If missing, report as validation failure and trigger repair/sync
+
+Core files that must always be validated:
 ```
 .agents/workflow.json        # Must be valid JSON with required fields
 .agents/ROADMAP.md           # Must exist (can be empty template)
-.agents/context/index.md     # Must exist
-.agents/context/phase-research.md
-.agents/context/phase-red.md
-.agents/context/phase-green.md
-.agents/context/phase-refactor.md
-.agents/context/testing.md
-.agents/context/artifacts.md
-.agents/work/backlog.md      # Priority-ordered backlog
-.agents/work/queued.md       # Processing queue
-.agents/work/completed.md    # Recently completed items
-.agents/work/index.md        # Work directory index
-.agents/archive/index.md     # Archive index
 ```
+
+Dynamic validation (compare against actual template files):
+```
+For each file in .template/context/*:
+  Check: .agents/context/<filename> exists
+
+For each file in .template/work/*:
+  Check: .agents/work/<filename> exists
+
+For each file in .template/archive/*:
+  Check: .agents/archive/<filename> exists (excluding work/ subdirs)
+
+For each file in .template/patterns/*:
+  Check: .agents/patterns/<filename> exists
+
+For each file in .template/mistakes/*:
+  Check: .agents/mistakes/<filename> exists
+```
+
+This ensures new template files are automatically detected and copied during validation, regardless of version number.
 
 #### File Format Validation
 ```
@@ -115,10 +134,14 @@ When `.agents/` exists and installed version < plugin version:
 
 2. **Add missing directories** from Required Directories list
 
-3. **Update context files** (replace with latest templates):
-   - `.agents/context/phase-*.md`
-   - `.agents/context/testing.md`
-   - `.agents/context/artifacts.md`
+3. **Sync all template files** (copy missing, replace context files):
+   - For each file in `.template/context/*`: copy to `.agents/context/` (add missing OR replace existing)
+   - For each file in `.template/work/*`: copy if missing (don't replace user content)
+   - For each file in `.template/archive/*`: copy if missing
+   - For each file in `.template/patterns/*`: copy index.md if missing
+   - For each file in `.template/mistakes/*`: copy index.md if missing
+
+   **This ensures any new template files are automatically synced, not just hardcoded ones.**
 
 4. **Migrate workflow.json**:
    - Preserve: currentPhase, currentWorkItem, completedItems, stats
