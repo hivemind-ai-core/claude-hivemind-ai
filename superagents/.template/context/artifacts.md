@@ -9,10 +9,30 @@ Each work item has a dedicated directory with all its artifacts.
 3. **Audit Trail** - Decisions are documented and traceable
 4. **Fresh Context** - Each phase agent starts clean by reading files
 
+## Work Item Types
+
+There are two types of work items:
+
+### Atomic Work Items
+Small, focused tasks that can be implemented directly:
+- 1-5 tests maximum
+- Clear, unambiguous scope
+- Single focused session to complete
+- Follow full RPI workflow (Research → RED → GREEN → REFACTOR)
+
+### Research Work Items
+Tasks that need breakdown before implementation:
+- Prefixed with `research-` in slug
+- Analyze scope and create atomic sub-tasks
+- Do NOT follow RPI workflow
+- Output: multiple atomic work items added to backlog
+- Archived after creating sub-tasks
+
 ## Work Item Directory Structure
 
 All artifacts for a work item live in `.agents/work/{slug}/`:
 
+**For Atomic Items:**
 ```
 .agents/work/{slug}/
 ├── definition.md       # Work item description and acceptance criteria
@@ -23,8 +43,17 @@ All artifacts for a work item live in `.agents/work/{slug}/`:
 └── report.md           # Combined phase results
 ```
 
+**For Research Items:**
+```
+.agents/work/research-{slug}/
+├── definition.md       # Original task and research goal
+├── breakdown.md        # Analysis and sub-task list
+└── report.md           # Summary of created work items
+```
+
 ## Artifact Flow
 
+**Atomic Items:**
 ```
 work-research writes research.md
     ↓
@@ -37,12 +66,37 @@ rpi(phase=refactor) reads green-plan.md → writes refactor-plan.md → updates 
 archive-work moves .agents/work/{slug}/ → .agents/archive/{slug}/
 ```
 
+**Research Items:**
+```
+work-research reads definition.md
+    ↓
+work-research analyzes codebase, spec, requirements
+    ↓
+work-research writes breakdown.md (list of atomic tasks)
+    ↓
+work-research creates atomic work item directories
+    ↓
+work-research adds items to backlog.md
+    ↓
+work-research writes report.md (summary)
+    ↓
+archive-work moves .agents/work/research-{slug}/ → .agents/archive/research-{slug}/
+```
+
 ## Definition Format
 
 Created by `/superagents:backlog` or `/superagents:queue-add` commands:
 
+### Atomic Work Item Definition
+
 ```markdown
-# Work Item: {slug}
+# {Description}
+
+## Priority
+{high|medium|low}
+
+## Type
+atomic
 
 ## Description
 {what needs to be done}
@@ -51,14 +105,78 @@ Created by `/superagents:backlog` or `/superagents:queue-add` commands:
 - [ ] Criterion 1
 - [ ] Criterion 2
 
+## Created
+{timestamp}
+```
+
+### Research Work Item Definition
+
+```markdown
+# Research: {Description}
+
 ## Priority
 {high|medium|low}
 
-## Notes
-{any additional context}
+## Type
+research
+
+## Description
+{User's description}
+
+## Research Goal
+Analyze this task and break it down into atomic work items.
+
+## Output Required
+This research item will:
+1. Investigate the codebase to understand scope
+2. Identify all sub-tasks needed
+3. Create atomic work items for each sub-task
+4. Add created items to the backlog
+
+## Original Request
+{User's original description verbatim}
+
+## Created
+{timestamp}
 ```
 
-## Research Format
+## Breakdown Format
+
+Created by `work-research` agent for research items:
+
+```markdown
+# Breakdown: {slug}
+
+## Original Request
+{from definition.md}
+
+## Analysis Summary
+{what was discovered during research}
+
+## Atomic Work Items
+
+### 1. {short-title}
+- **Slug**: {slug-1}
+- **Description**: {what this item does}
+- **Acceptance Criteria**:
+  - [ ] Criterion 1
+  - [ ] Criterion 2
+- **Estimated Tests**: N
+- **Files**: {list of files}
+
+### 2. {short-title}
+...
+
+## Recommended Order
+1. {slug-1} - {reason}
+2. {slug-2} - {reason}
+...
+
+## Notes
+{any important context for implementation}
+```
+
+## Research Format (for Atomic Items)
 
 Created by `work-research` agent:
 

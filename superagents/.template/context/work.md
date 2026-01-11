@@ -17,12 +17,23 @@ After each `rpi-research` or `rpi-plan` agent completes:
 
 This is non-negotiable. An agent claiming to write a file is not proof it was written.
 
-Each work item requires ALL phases to complete:
+## Two Workflows Based on Item Type
+
+### Atomic Items (type: atomic)
+Full RPI workflow:
 ```
 Get Item → Research → RED → GREEN-VALIDATE → GREEN → REFACTOR → Architecture → Archive → Check for More
                         ↑                |
                         └── kickback ────┘ (if tests invalid, max 3 retries)
 ```
+
+### Research Items (type: research)
+Breakdown workflow:
+```
+Get Item → Research (creates atomic items) → Archive → Check for More
+```
+
+Research items do NOT go through RED/GREEN/REFACTOR. They create atomic items that do.
 
 Only stop when:
 - A fatal error occurs (gate fails, agent errors)
@@ -52,16 +63,63 @@ Write: Updated queued.md
 Extract: {slug}
 ```
 
-### 2. Research Phase
+### 1.5. Determine Item Type
+
+```
+Read: .agents/work/{slug}/definition.md
+Find: "## Type" section
+Extract: {type} (atomic or research)
+```
+
+**If type = "research":** Go to [Step 2R: Research Item Workflow](#2r-research-item-workflow)
+**If type = "atomic":** Go to [Step 2: Atomic Research Phase](#2-atomic-research-phase)
+
+---
+
+### 2R. Research Item Workflow
+
+Research items break down complex tasks into atomic items. They do NOT go through RPI.
+
+```
+Task(superagents:work-research, "{slug}")
+  Reads: .agents/work/{slug}/definition.md, spec/, architecture/, src/
+  Writes: .agents/work/{slug}/breakdown.md
+  Writes: .agents/work/{slug}/report.md
+  Creates: Multiple .agents/work/{item-slug}/ directories
+  Updates: .agents/work/backlog.md (adds atomic items)
+  Returns: { type: "research", createdItems: [...], summary }
+```
+
+**VERIFY:**
+1. Read `.agents/work/{slug}/breakdown.md` - must exist with >500 chars
+2. Read `.agents/work/{slug}/report.md` - must exist with >200 chars
+3. Check `createdItems` array - must have at least 1 item
+4. For each created item, verify `.agents/work/{item-slug}/definition.md` exists
+
+**If verification fails:** STOP. Report error.
+
+**If verification passes:**
+```
+Task(superagents:git-commit, "phase=research workItem={slug}")
+  Returns: { commitHash }
+```
+
+**→ Skip to Step 7 (Archive Phase). Research items don't need RPI.**
+
+---
+
+### 2. Atomic Research Phase
+
+Standard research for atomic items.
 
 ```
 Task(superagents:work-research, "{slug}")
   Reads: .agents/work/{slug}/definition.md, spec/, architecture/
   Writes: .agents/work/{slug}/research.md
-  Returns: { testCount, summary }
+  Returns: { type: "atomic", testCount, summary }
 ```
 
-If testCount > 5: Work item too large, needs splitting. STOP.
+If testCount > 5: Work item incorrectly classified. STOP with error.
 
 **→ Immediately proceed to RED phase. Do not stop.**
 
