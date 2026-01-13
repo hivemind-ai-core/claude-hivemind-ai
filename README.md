@@ -17,12 +17,16 @@ Hivemind AI provides modular, composable plugins that enhance Claude Code with s
   ```bash
   curl -fsSL https://bun.sh/install | bash
   ```
+  Or with Homebrew:
+  ```bash
+  brew install oven-sh/bun/bun
+  ```
 
 ## Installation
 
 ```bash
 # Add marketplace
-claude plugin marketplace add git@github.com:hivemind-ai-core/claude-hivemind-ai.git
+claude plugin marketplace add hivemind-ai-core/claude-hivemind-ai
 
 # Install plugin
 claude plugin install superagents@hivemind-ai
